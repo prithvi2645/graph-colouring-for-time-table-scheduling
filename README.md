@@ -68,7 +68,6 @@ pip install -r requirements.txt
 python backend/app.py
 ```
 
-Open **http://127.0.0.1:5000** in your browser.
 
 ---
 
