@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Division Timetable — Graph Coloring Scheduler</title>
+<link rel="stylesheet" href="css/style.css"/>
+<style>
+/* ══════════════════════════════════════════
+   DIVISION SELECTOR
+══════════════════════════════════════════ */
+.div-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 12px; margin-bottom: 36px;
+}
+.div-card {
+  padding: 18px 16px;
+  border-radius: var(--r-lg);
+  background: var(--c-surface); border: 1px solid var(--c-border);
+  cursor: pointer; text-align: center;
+  transition: all var(--t);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  animation: fadeUp 0.3s ease both;
+}
+.div-card:hover { transform: translateY(-4px); border-color: var(--c-border2); box-shadow: 0 12px 36px rgba(0,0,0,0.35); }
+.div-card.active {
+  border-color: var(--c-cyan);
+  background: rgba(6,182,212,0.1);
+  box-shadow: 0 8px 28px rgba(6,182,212,0.25);
+}
+.div-badge {
+  width: 52px; height: 52px; border-radius: 14px; margin: 0 auto 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; font-weight: 900; color: #fff;
+  background: linear-gradient(135deg, var(--c-cyan), var(--c-indigo));
+  box-shadow: 0 4px 14px rgba(6,182,212,0.4);
+}
+.div-card.active .div-badge {
+  background: linear-gradient(135deg, var(--c-purple), var(--c-cyan));
+  box-shadow: 0 4px 14px rgba(168,85,247,0.4);
+}
+.div-card-name  { font-weight: 800; font-size: 0.92rem; }
+.div-card-count { font-size: 0.72rem; color: var(--c-muted); margin-top: 4px; }
+
+/* ══════════════════════════════════════════
+   BANNER
+══════════════════════════════════════════ */
+.div-banner {
+  display: flex; align-items: center; gap: 22px; flex-wrap: wrap;
+  padding: 22px 28px; border-radius: var(--r-xl); margin-bottom: 24px;
+  background: var(--c-surface); border: 1px solid var(--c-border);
+  backdrop-filter: blur(16px);
+}
+.div-banner-icon {
+  width: 64px; height: 64px; border-radius: 18px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; font-weight: 900; color: #fff;
+  background: linear-gradient(135deg, var(--c-cyan), var(--c-purple));
+  box-shadow: 0 8px 24px rgba(6,182,212,0.45);
+}
+.div-banner-name  { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; }
+.div-banner-subs  { font-size: 0.84rem; color: var(--c-muted); margin-top: 3px; }
+.div-banner-right { margin-left: auto; display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* ══════════════════════════════════════════
+   STAT BAND
+══════════════════════════════════════════ */
+.stat-band {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));
+  gap: 12px; margin-bottom: 32px;
+}
+.stat-badge {
+  padding: 18px 12px; border-radius: var(--r-lg);
+  background: var(--c-surface); border: 1px solid var(--c-border);
+  backdrop-filter: blur(10px); text-align: center;
+  transition: transform var(--t);
+}
+.stat-badge:hover { transform: translateY(-3px); }
+.stat-badge-num   { font-size: 2rem; font-weight: 900; line-height: 1; letter-spacing: -0.04em; margin-bottom: 4px; }
+.stat-badge-label { font-size: 0.66rem; color: var(--c-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+
+/* ══════════════════════════════════════════
+   WEEKLY TABLE
+══════════════════════════════════════════ */
+.schedule-wrap { overflow-x: auto; }
+.week-table {
+  width: 100%; border-collapse: separate; border-spacing: 4px;
+  min-width: 900px;
+}
+
+/* Header */
+.week-table th {
+  padding: 12px 8px; text-align: center; border-radius: var(--r-sm);
+  font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+}
+.th-time {
+  background: rgba(6,182,212,0.08); border: 1px solid rgba(6,182,212,0.18);
+  color: var(--c-cyan); width: 148px; text-align: left; padding-left: 12px;
+}
+.th-day {
+  background: var(--c-surface); border: 1px solid var(--c-border);
+  color: var(--c-text); min-width: 125px;
+}
+.th-day.is-today {
+  background: rgba(168,85,247,0.1); border-color: rgba(168,85,247,0.3);
+  color: var(--c-purple);
+}
+
+/* Time label cell */
+.td-time-wrap { padding: 3px !important; }
+.time-label-cell {
+  background: rgba(255,255,255,0.03); border: 1px solid var(--c-border);
+  border-radius: var(--r-sm); padding: 10px 12px; height: 100%;
+  display: flex; flex-direction: column; justify-content: center; min-height: 88px;
+}
+.tlc-period { font-size: 0.64rem; font-weight: 800; color: var(--c-cyan); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 3px; }
+.tlc-range  { font-size: 0.76rem; font-weight: 700; line-height: 1.35; }
+.tlc-dur    { font-size: 0.62rem; color: var(--c-muted); margin-top: 3px; }
+
+/* Subject cell */
+.week-table td.subj-td { padding: 4px; vertical-align: stretch; }
+.subj-cell {
+  min-height: 88px; height: 100%; border-radius: var(--r-sm);
+  padding: 10px 12px; color: #fff;
+  display: flex; flex-direction: column; justify-content: space-between;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+  position: relative; overflow: hidden; cursor: default;
+  animation: popIn 0.25s ease both;
+}
+.subj-cell::after {
+  content: ''; position: absolute; inset: 0;
+  background: rgba(255,255,255,0.07); pointer-events: none;
+}
+.subj-cell:hover {
+  transform: scale(1.06); z-index: 8;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.55); filter: brightness(1.12);
+}
+.sc-slot    { font-size: 0.56rem; font-weight: 800; opacity: 0.55; letter-spacing: 0.09em; text-transform: uppercase; }
+.sc-subject { font-size: 0.84rem; font-weight: 800; line-height: 1.25; margin: 4px 0 3px; }
+.sc-teacher { font-size: 0.68rem; opacity: 0.85; display: flex; align-items: center; gap: 4px; }
+.sc-teacher::before { content: '👤'; font-size: 0.6rem; }
+
+/* Free period cell */
+.free-cell {
+  min-height: 88px; height: 100%; border-radius: var(--r-sm);
+  display: flex; align-items: center; justify-content: center;
+  border: 1px dashed rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.015);
+}
+.free-text { font-size: 0.62rem; color: rgba(255,255,255,0.18); text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* Break rows */
+.break-row td { padding: 2px 4px; }
+.break-td-time {
+  background: rgba(245,158,11,0.07); border: 1px solid rgba(245,158,11,0.2);
+  border-radius: var(--r-sm); padding: 8px 12px;
+}
+.btd-label { font-size: 0.7rem; font-weight: 800; color: var(--c-amber); }
+.btd-sub   { font-size: 0.62rem; color: var(--c-muted); }
+.break-span {
+  background: rgba(245,158,11,0.04); border: 1px solid rgba(245,158,11,0.12);
+  border-radius: var(--r-sm); padding: 8px 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; font-weight: 700; color: rgba(245,158,11,0.55);
+  letter-spacing: 0.05em;
+}
+
+/* ══════════════════════════════════════════
+   SUBJECT LIST TABLE
+══════════════════════════════════════════ */
+.subj-list-table {
+  width: 100%; border-collapse: collapse; font-size: 0.85rem;
+}
+.subj-list-table th {
+  padding: 10px 14px; text-align: left;
+  border-bottom: 1px solid var(--c-border);
+  font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--c-muted);
+}
+.subj-list-table td {
+  padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.04);
+  vertical-align: middle;
+  transition: background var(--t);
+}
+.subj-list-table tr:hover td { background: rgba(255,255,255,0.025); }
+
+/* ══════════════════════════════════════════
+   NO DATA
+══════════════════════════════════════════ */
+.no-data { display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 80px 40px; text-align: center; gap: 14px; }
+.no-data-icon { font-size: 4rem; opacity: 0.3; }
+
+/* Print */
+@media print {
+  #bg3d, .bg-overlay, .nav, footer, .no-print { display: none !important; }
+  body { background: #fff; color: #000; }
+  .subj-cell { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .schedule-wrap { overflow: visible; }
+  .week-table { min-width: 0; font-size: 0.75rem; }
+}
+
+@media (max-width: 640px) {
+  .div-banner { flex-direction: column; align-items: flex-start; }
+  .div-banner-right { margin-left: 0; }
+}
+</style>
+</head>
+<body>
+<canvas id="bg3d"></canvas>
+<div class="bg-overlay"></div>
+
+<div class="page-wrap">
+  <nav class="nav">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-dot">GC</div><span>GraphScheduler</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html"     class="nav-link">Home</a>
+      <a href="setup.html"     class="nav-link">Setup</a>
+      <a href="graph.html"     class="nav-link">Graph</a>
+      <a href="timetable.html" class="nav-link">Timetable</a>
+      <a href="faculty.html"   class="nav-link">Faculty</a>
+      <a href="division.html"  class="nav-link active">Division</a>
+    </div>
+  </nav>
+
+  <div class="container" style="padding-bottom: 80px;">
+
+    <div style="padding: 32px 0 24px;">
+      <div class="section-label" style="margin-bottom: 12px;">🏫 Division Weekly Timetable</div>
+      <h1 class="section-title anim-up">Complete <span class="grad-cyan">Division Schedule</span></h1>
+      <p class="section-sub anim-up delay-1">
+        Select a class division to see its entire week —
+        every subject, faculty member, period and break across all 6 days.
+      </p>
+    </div>
+
+    <!-- NO DATA STATE -->
+    <div id="noDataView" class="glass" style="display:none; margin-bottom:40px;">
+      <div class="no-data">
+        <div class="no-data-icon">🏫</div>
+        <h3>No timetable generated yet</h3>
+        <p>Go to Setup, add subjects with teachers &amp; divisions, then generate the timetable.</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:8px;">
+          <a href="setup.html"     class="btn btn-primary">⚙️ Go to Setup</a>
+          <a href="timetable.html" class="btn btn-ghost">📅 View Timetable</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN VIEW -->
+    <div id="mainView" style="display:none;">
+
+      <!-- DIVISION CARDS -->
+      <div class="section-label no-print" style="margin-bottom: 12px;">Select a Division</div>
+      <div class="div-selector-grid no-print" id="divGrid"></div>
+
+      <!-- SCHEDULE PANEL -->
+      <div id="schedPanel" style="display:none;">
+
+        <!-- BANNER -->
+        <div class="div-banner anim-up">
+          <div class="div-banner-icon" id="dv-icon"></div>
+          <div>
+            <div class="div-banner-name" id="dv-name"></div>
+            <div class="div-banner-subs" id="dv-subs"></div>
+          </div>
+          <div class="div-banner-right no-print">
+            <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨️ Print</button>
+            <a href="faculty.html" class="btn btn-ghost btn-sm">👨‍🏫 Faculty View</a>
+            <a href="timetable.html" class="btn btn-primary btn-sm">📅 Full Timetable</a>
+          </div>
+        </div>
+
+        <!-- STATS -->
+        <div class="stat-band anim-up delay-1" id="dv-stats"></div>
+
+        <!-- WEEKLY TABLE -->
+        <div class="section-label" style="margin-bottom: 10px;">📅 Complete Weekly Schedule</div>
+        <div class="glass" style="padding: 16px; margin-bottom: 32px;">
+          <div style="display:flex; gap:14px; flex-wrap:wrap; margin-bottom:14px;
+                      font-size:0.75rem; color:var(--c-muted); align-items:center;">
+            <span>📆 <strong style="color:var(--c-text)">6 days</strong> Mon – Sat</span>
+            <span>⏰ <strong style="color:var(--c-text)">6 periods</strong>/day (10 AM – 5 PM)</span>
+            <span>☕ <strong style="color:var(--c-text)">2 breaks</strong> included</span>
+            <span style="margin-left:auto;font-style:italic;">Hover a cell for details</span>
+          </div>
+          <div class="schedule-wrap">
+            <table class="week-table">
+              <thead id="weekHead"></thead>
+              <tbody id="weekBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SUBJECT DETAILS TABLE -->
+        <div class="section-label" style="margin-bottom: 12px;">📚 Subject-wise Breakdown</div>
+        <div class="glass" style="padding: 20px 24px; margin-bottom: 32px;">
+          <div style="overflow-x:auto;">
+            <table class="subj-list-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Subject</th>
+                  <th>Faculty</th>
+                  <th>Slot</th>
+                  <th>Day</th>
+                  <th>Period</th>
+                  <th>Time</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="subjListBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TEACHER SUMMARY -->
+        <div class="section-label" style="margin-bottom: 12px;">👨‍🏫 Faculty Assigned to This Division</div>
+        <div class="glass" style="padding: 20px 24px; margin-bottom: 32px;">
+          <div id="teacherSummary" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px;"></div>
+        </div>
+
+      </div><!-- /schedPanel -->
+    </div><!-- /mainView -->
+  </div>
+
+  <footer class="footer">
+    <div class="footer-brand">🎓 VTU Graph Theory Mini Project</div>
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="setup.html">Setup</a>
+      <a href="graph.html">Graph</a>
+      <a href="timetable.html">Timetable</a>
+      <a href="faculty.html">Faculty</a>
+      <a href="division.html">Division</a>
+    </div>
+    <div>Graph Coloring • Greedy Algorithm • Vanilla JS</div>
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="js/bg3d.js"></script>
+<script src="js/state.js"></script>
+<script>
+/* ═══════════════════════════════════
+   COLORS
+═══════════════════════════════════ */
+const GRADIENTS = [
+  'linear-gradient(140deg,#7c3aed,#a855f7)',
+  'linear-gradient(140deg,#0284c7,#06b6d4)',
+  'linear-gradient(140deg,#059669,#10b981)',
+  'linear-gradient(140deg,#d97706,#f59e0b)',
+  'linear-gradient(140deg,#e11d48,#f43f5e)',
+  'linear-gradient(140deg,#0d9488,#14b8a6)',
+  'linear-gradient(140deg,#6d28d9,#8b5cf6)',
+  'linear-gradient(140deg,#be185d,#ec4899)',
+  'linear-gradient(140deg,#1e40af,#3b82f6)',
+  'linear-gradient(140deg,#166534,#22c55e)',
+  'linear-gradient(140deg,#92400e,#f59e0b)',
+  'linear-gradient(140deg,#7f1d1d,#ef4444)',
+];
+const HEX_COLORS = [
+  '#a855f7','#06b6d4','#10b981','#f59e0b','#f43f5e','#14b8a6',
+  '#8b5cf6','#ec4899','#3b82f6','#22c55e','#f59e0b','#ef4444',
+];
+
+const DAY_SHORT = { Monday:'Mon', Tuesday:'Tue', Wednesday:'Wed', Thursday:'Thu', Friday:'Fri', Saturday:'Sat' };
+const DEPT_ABBR = name => name.split(/[\s\-]/)[0].slice(0,3).toUpperCase();
+
+let state = null;
+
+/* ═══════════════════════════════════
+   INIT
+═══════════════════════════════════ */
+function init() {
+  state = APP.loadState();
+  const hasData = state.subjects.length > 0 && Object.keys(state.coloring).length > 0;
+  document.getElementById('noDataView').style.display = hasData ? 'none' : 'block';
+  document.getElementById('mainView').style.display   = hasData ? 'block' : 'none';
+  if (!hasData) return;
+
+  renderDivGrid();
+  if (state.divisions.length > 0) selectDiv(state.divisions[0].id);
+}
+
+/* ═══════════════════════════════════
+   DIVISION SELECTOR CARDS
+═══════════════════════════════════ */
+function renderDivGrid() {
+  const wrap = document.getElementById('divGrid');
+  if (!state.divisions.length) {
+    wrap.innerHTML = '<p style="color:var(--c-muted);font-size:0.88rem;">No divisions added. <a href="setup.html" style="color:var(--c-cyan);">Go to Setup →</a></p>';
+    return;
+  }
+  wrap.innerHTML = state.divisions.map((d, i) => {
+    const cnt = (d.subjects || []).length;
+    return `<div class="div-card" id="dc-${d.id}" onclick="selectDiv('${d.id}')"
+                 style="animation-delay:${i*0.05}s">
+      <div class="div-badge">${DEPT_ABBR(d.name)}</div>
+      <div class="div-card-name">${d.name}</div>
+      <div class="div-card-count">${cnt} subject${cnt!==1?'s':''}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ═══════════════════════════════════
+   SELECT A DIVISION
+═══════════════════════════════════ */
+function selectDiv(divId) {
+  document.querySelectorAll('.div-card').forEach(c => c.classList.remove('active'));
+  const card = document.getElementById(`dc-${divId}`);
+  if (card) { card.classList.add('active'); card.scrollIntoView({ behavior:'smooth', block:'nearest' }); }
+
+  const div = state.divisions.find(d => d.id === divId);
+  if (!div) return;
+  document.getElementById('schedPanel').style.display = 'block';
+
+  const numSlots = new Set(Object.values(state.coloring)).size;
+  const schedule = APP.buildSchedule(numSlots);
+
+  /* Build this division's period list */
+  const myPeriods = buildDivPeriods(div, schedule);
+
+  renderBanner(div, myPeriods);
+  renderStats(div, myPeriods);
+  renderWeekTable(myPeriods);
+  renderSubjectList(div, schedule);
+  renderTeacherSummary(div);
+}
+
+/* ─── Build {subjectId, subjectName, slot, day, period, timeLabel, teachers[]} ─── */
+function buildDivPeriods(div, schedule) {
+  return (div.subjects || []).map(id => {
+    const slot = state.coloring[id];
+    if (slot === undefined) return null;
+    const sch  = schedule[slot];
+    if (!sch) return null;
+    return {
+      subjectId:   id,
+      subjectName: APP.subjectName(state, id),
+      slot,
+      day:         sch.day,
+      dayIndex:    sch.dayIndex,
+      period:      sch.period,
+      timeLabel:   sch.timeLabel,
+      teachers:    APP.subjectTeachers(state, id),
+    };
+  }).filter(Boolean);
+}
+
+/* ═══════════════════════════════════
+   BANNER
+═══════════════════════════════════ */
+function renderBanner(div, myPeriods) {
+  document.getElementById('dv-icon').textContent = DEPT_ABBR(div.name);
+  document.getElementById('dv-name').textContent = div.name + ' — Weekly Timetable';
+  const teachers = [...new Set(myPeriods.flatMap(p => p.teachers))];
+  document.getElementById('dv-subs').textContent =
+    `📚 ${(div.subjects||[]).length} subjects  ·  👨‍🏫 ${teachers.length} teacher${teachers.length!==1?'s':''}`;
+}
+
+/* ═══════════════════════════════════
+   STATS BAND
+═══════════════════════════════════ */
+function renderStats(div, myPeriods) {
+  const totalSubs   = (div.subjects||[]).length;
+  const busyDays    = new Set(myPeriods.map(p => p.day)).size;
+  const freeDays    = APP.DAYS.length - busyDays;
+  const totalSlots  = APP.DAYS.length * APP.PERIOD_TIMES.length;
+  const freePeriods = totalSlots - myPeriods.length;
+  const teachers    = new Set(myPeriods.flatMap(p => p.teachers)).size;
+
+  document.getElementById('dv-stats').innerHTML = `
+    <div class="stat-badge"><div class="stat-badge-num grad-cyan">${totalSubs}</div><div class="stat-badge-label">Subjects</div></div>
+    <div class="stat-badge"><div class="stat-badge-num grad-purple">${totalSubs}</div><div class="stat-badge-label">Classes/Week</div></div>
+    <div class="stat-badge"><div class="stat-badge-num" style="color:var(--c-green)">${busyDays}</div><div class="stat-badge-label">Active Days</div></div>
+    <div class="stat-badge"><div class="stat-badge-num" style="color:var(--c-amber)">${freeDays}</div><div class="stat-badge-label">Free Days</div></div>
+    <div class="stat-badge"><div class="stat-badge-num" style="color:var(--c-muted)">${freePeriods}</div><div class="stat-badge-label">Free Periods</div></div>
+    <div class="stat-badge"><div class="stat-badge-num" style="color:var(--c-indigo)">${teachers}</div><div class="stat-badge-label">Teachers</div></div>
+  `;
+}
+
+/* ═══════════════════════════════════
+   WEEKLY TABLE
+   Columns: Time | Mon | Tue | Wed | Thu | Fri | Sat
+   Rows:    P1 · P2 · BREAK · P3 · P4 · LUNCH · P5 · P6
+═══════════════════════════════════ */
+function renderWeekTable(myPeriods) {
+  const today = new Date().toLocaleDateString('en-US', { weekday:'long' });
+
+  /* lookup: day → period → period data */
+  const lkp = {};
+  APP.DAYS.forEach(d => { lkp[d] = {}; });
+  myPeriods.forEach(p => {
+    if (!lkp[p.day][p.period]) lkp[p.day][p.period] = [];
+    lkp[p.day][p.period].push(p);
+  });
+
+  /* HEAD */
+  document.getElementById('weekHead').innerHTML = `<tr>
+    <th class="th-time">⏰ Time / Day</th>
+    ${APP.DAYS.map(d =>
+      `<th class="th-day${d===today?' is-today':''}">${DAY_SHORT[d]||d}${d===today?' 📍':''}</th>`
+    ).join('')}
+  </tr>`;
+
+  /* BODY */
+  const rows = [];
+  APP.PERIOD_TIMES.forEach(pt => {
+    /* Period row */
+    const cells = APP.DAYS.map(day => {
+      const items = lkp[day][pt.period];
+      if (!items || !items.length) {
+        return `<td class="subj-td"><div class="free-cell"><span class="free-text">Free</span></div></td>`;
+      }
+      return `<td class="subj-td">${items.map(p => {
+        const bg = GRADIENTS[p.slot % GRADIENTS.length];
+        const teacher = p.teachers.length ? p.teachers.join(', ') : 'TBD';
+        return `<div class="subj-cell" style="background:${bg}"
+                     title="${p.subjectName} | ${teacher} | ${p.timeLabel}">
+          <div class="sc-slot">Slot ${p.slot+1}</div>
+          <div class="sc-subject">${p.subjectName}</div>
+          <div class="sc-teacher">${teacher}</div>
+        </div>`;
+      }).join('')}</td>`;
+    }).join('');
+
+    rows.push(`<tr>
+      <td class="td-time-wrap">
+        <div class="time-label-cell">
+          <div class="tlc-period">Period ${pt.period}</div>
+          <div class="tlc-range">${pt.label.replace(' – ','<br/>to ')}</div>
+          <div class="tlc-dur">55 min</div>
+        </div>
+      </td>
+      ${cells}
+    </tr>`);
+
+    /* Break row after period 2 and period 4 */
+    const brk = APP.BREAKS.find(b => b.afterPeriod === pt.period);
+    if (brk) {
+      rows.push(`<tr class="break-row">
+        <td class="td-time-wrap">
+          <div class="break-td-time">
+            <div class="btd-label">${brk.label}</div>
+            <div class="btd-sub">${brk.time}</div>
+            <div class="btd-sub">${brk.duration}</div>
+          </div>
+        </td>
+        <td colspan="6" style="padding:2px 4px;">
+          <div class="break-span">─── ${brk.label} &nbsp;·&nbsp; ${brk.time} &nbsp;·&nbsp; ${brk.duration} ───</div>
+        </td>
+      </tr>`);
+    }
+  });
+
+  document.getElementById('weekBody').innerHTML = rows.join('');
+}
+
+/* ═══════════════════════════════════
+   SUBJECT LIST TABLE
+═══════════════════════════════════ */
+function renderSubjectList(div, schedule) {
+  const subs = (div.subjects || []);
+  if (!subs.length) {
+    document.getElementById('subjListBody').innerHTML =
+      '<tr><td colspan="8" style="padding:20px;color:var(--c-muted);text-align:center;">No subjects assigned.</td></tr>';
+    return;
+  }
+  document.getElementById('subjListBody').innerHTML = subs.map((id, i) => {
+    const slot    = state.coloring[id] ?? 0;
+    const sch     = schedule[slot];
+    const hex     = HEX_COLORS[slot % HEX_COLORS.length];
+    const teachers= APP.subjectTeachers(state, id);
+    const hasConf = APP.detectConflicts(state).some(([a,b]) => a===id||b===id);
+
+    return `<tr onmouseover="this.querySelectorAll('td').forEach(t=>t.style.background='rgba(255,255,255,0.03)')"
+               onmouseout="this.querySelectorAll('td').forEach(t=>t.style.background='')">
+      <td style="padding:12px 14px;color:var(--c-muted);font-weight:700;">${i+1}</td>
+      <td style="padding:12px 14px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:10px;height:10px;border-radius:50%;background:${hex};
+                      box-shadow:0 0 7px ${hex}99;flex-shrink:0;"></div>
+          <strong>${APP.subjectName(state, id)}</strong>
+        </div>
+      </td>
+      <td style="padding:12px 14px;">
+        ${teachers.length
+          ? teachers.map(t=>`<span style="display:inline-block;padding:2px 9px;border-radius:50px;font-size:0.72rem;
+              font-weight:600;background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.25);
+              color:var(--c-purple);margin:1px;">${t}</span>`).join('')
+          : '<span style="color:var(--c-muted);font-style:italic;font-size:0.8rem;">TBD</span>'}
+      </td>
+      <td style="padding:12px 14px;">
+        <span style="display:inline-block;padding:3px 10px;border-radius:50px;font-size:0.74rem;
+                     font-weight:700;background:${hex}22;border:1px solid ${hex}55;color:${hex};">
+          Slot ${slot+1}
+        </span>
+      </td>
+      <td style="padding:12px 14px;font-weight:700;">${sch ? sch.day : '—'}</td>
+      <td style="padding:12px 14px;font-weight:700;">${sch ? 'P'+sch.period : '—'}</td>
+      <td style="padding:12px 14px;color:var(--c-muted);font-size:0.82rem;">${sch ? sch.timeLabel : '—'}</td>
+      <td style="padding:12px 14px;">
+        ${hasConf
+          ? '<span style="color:var(--c-amber);font-size:0.78rem;font-weight:700;">⚠️ Detected</span>'
+          : '<span style="color:var(--c-green);font-size:0.78rem;font-weight:700;">✅ Clear</span>'}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+/* ═══════════════════════════════════
+   TEACHER SUMMARY CARDS
+═══════════════════════════════════ */
+function renderTeacherSummary(div) {
+  const schedule = APP.buildSchedule(new Set(Object.values(state.coloring)).size);
+  const teacherMap = {};
+  (div.subjects||[]).forEach(id => {
+    const teachers = APP.subjectTeachers(state, id);
+    const slot = state.coloring[id];
+    const sch  = schedule[slot];
+    teachers.forEach(t => {
+      if (!teacherMap[t]) teacherMap[t] = [];
+      teacherMap[t].push({ name: APP.subjectName(state, id), slot, sch });
+    });
+  });
+
+  const keys = Object.keys(teacherMap);
+  if (!keys.length) {
+    document.getElementById('teacherSummary').innerHTML =
+      '<p style="color:var(--c-muted);font-style:italic;font-size:0.88rem;">No teachers assigned.</p>';
+    return;
+  }
+
+  document.getElementById('teacherSummary').innerHTML = keys.map((tname, i) => {
+    const items = teacherMap[tname];
+    const initials = tname.split(/\s+/).map(w=>w[0]||'').join('').toUpperCase().slice(0,2);
+    return `<div class="glass" style="padding:16px 18px;border-radius:var(--r-lg);">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--c-purple),var(--c-cyan));
+                    display:flex;align-items:center;justify-content:center;font-weight:900;font-size:0.85rem;color:#fff;
+                    box-shadow:0 4px 12px rgba(168,85,247,0.4);flex-shrink:0;">${initials}</div>
+        <div>
+          <div style="font-weight:800;font-size:0.9rem;">${tname}</div>
+          <div style="font-size:0.7rem;color:var(--c-muted);">${items.length} class${items.length!==1?'es':''} for this division</div>
+        </div>
+      </div>
+      ${items.map(it => {
+        const hex = HEX_COLORS[(it.slot||0) % HEX_COLORS.length];
+        return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;
+                            border-bottom:1px solid rgba(255,255,255,0.05);">
+          <div style="width:7px;height:7px;border-radius:50%;background:${hex};flex-shrink:0;"></div>
+          <div style="flex:1;font-size:0.8rem;font-weight:600;">${it.name}</div>
+          <div style="font-size:0.72rem;color:var(--c-muted);">
+            ${it.sch ? it.sch.day.slice(0,3)+' P'+it.sch.period : '—'}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('');
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Graph Visualization — Graph Coloring Timetable</title>
+<link rel="stylesheet" href="css/style.css"/>
+<style>
+.graph-layout{
+  display:grid;grid-template-columns:1fr 300px;gap:24px;
+  padding:32px 0 80px;
+}
+@media(max-width:900px){.graph-layout{grid-template-columns:1fr;}}
+
+.graph-wrap{position:relative;}
+.canvas-container{
+  background:rgba(0,0,0,0.3);
+  border:1px solid var(--c-border);
+  border-radius:var(--r-lg);
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;position:relative;
+  min-height:480px;
+}
+#graphCanvas{display:block;max-width:100%;cursor:grab;}
+#graphCanvas:active{cursor:grabbing;}
+
+.graph-controls{
+  display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;
+}
+
+.info-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 14px;border-radius:50px;
+  font-size:0.78rem;font-weight:600;
+  background:rgba(255,255,255,0.05);border:1px solid var(--c-border);
+  color:var(--c-muted);
+}
+
+/* SIDEBAR */
+.graph-sidebar{display:flex;flex-direction:column;gap:18px;}
+.side-card{padding:20px;border-radius:var(--r-lg);}
+
+.legend-list{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
+.legend-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;border-radius:var(--r-sm);
+  background:rgba(255,255,255,0.04);border:1px solid var(--c-border);
+  font-size:0.83rem;transition:border-color var(--t);
+}
+.legend-item:hover{border-color:var(--c-border2);}
+.legend-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;border:2px solid rgba(255,255,255,0.3);}
+.legend-item-info{flex:1;}
+.legend-slot{font-weight:700;font-size:0.82rem;}
+.legend-subs{font-size:0.76rem;color:var(--c-muted);margin-top:2px;}
+
+.conflict-scroll{max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;}
+.ci{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 10px;border-radius:var(--r-sm);
+  background:rgba(244,63,94,0.07);border:1px solid rgba(244,63,94,0.18);
+  font-size:0.8rem;color:#ffaabb;
+}
+.ci-reason{font-size:0.7rem;color:var(--c-muted);margin-top:1px;}
+
+.stat-row{
+  display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;
+}
+.stat-mini{
+  flex:1;min-width:100px;
+  padding:14px;border-radius:var(--r-md);
+  background:var(--c-surface);border:1px solid var(--c-border);
+  text-align:center;
+}
+.stat-mini-num{font-size:1.8rem;font-weight:900;line-height:1;}
+.stat-mini-label{font-size:0.72rem;color:var(--c-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-top:4px;}
+
+.no-data{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:80px 40px;text-align:center;gap:16px;
+  min-height:400px;
+}
+.no-data-icon{font-size:4rem;opacity:0.3;}
+.no-data h3{font-size:1.2rem;font-weight:700;}
+.no-data p{color:var(--c-muted);font-size:0.9rem;max-width:320px;}
+</style>
+</head>
+<body>
+<canvas id="bg3d"></canvas>
+<div class="bg-overlay"></div>
+
+<div class="page-wrap">
+  <nav class="nav">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-dot">GC</div><span>GraphScheduler</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="setup.html" class="nav-link">Setup</a>
+      <a href="graph.html" class="nav-link active">Graph</a>
+      <a href="timetable.html" class="nav-link">Timetable</a>
+      <a href="faculty.html"   class="nav-link">Faculty</a>
+      <a href="division.html" class="nav-link">Division</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div style="padding:32px 0 0;">
+      <div class="section-label" style="margin-bottom:12px;">🔗 Conflict Graph</div>
+      <h1 class="section-title anim-up">Visual <span class="grad-cyan">Graph View</span></h1>
+      <p class="section-sub anim-up delay-1">Each node is a subject. Edges show conflicts. Colors show the assigned time slot.</p>
+    </div>
+
+    <!-- NO DATA STATE -->
+    <div id="noDataView" class="glass" style="display:none;margin-bottom:40px;">
+      <div class="no-data">
+        <div class="no-data-icon">🔗</div>
+        <h3>No timetable generated yet</h3>
+        <p>Go to Setup, add your subjects, teachers & divisions, then generate the timetable.</p>
+        <a href="setup.html" class="btn btn-primary">⚙️ Go to Setup</a>
+      </div>
+    </div>
+
+    <!-- MAIN GRAPH VIEW -->
+    <div id="mainView" style="display:none;">
+      <div class="stat-row anim-up">
+        <div class="stat-mini"><div class="stat-mini-num grad-purple" id="st-nodes">0</div><div class="stat-mini-label">Subjects</div></div>
+        <div class="stat-mini"><div class="stat-mini-num grad-cyan"   id="st-edges">0</div><div class="stat-mini-label">Conflicts</div></div>
+        <div class="stat-mini"><div class="stat-mini-num grad-full"   id="st-slots">0</div><div class="stat-mini-label">Slots Used</div></div>
+        <div class="stat-mini"><div class="stat-mini-num" style="color:var(--c-green)" id="st-chr">χ=0</div><div class="stat-mini-label">Chromatic №</div></div>
+      </div>
+
+      <div class="graph-layout">
+        <div class="graph-wrap">
+          <div class="graph-controls">
+            <div class="info-pill">🖱️ Hover nodes for details</div>
+            <button class="btn btn-ghost btn-sm" onclick="redraw()">🔄 Redraw</button>
+            <button class="btn btn-primary btn-sm" onclick="window.location.href='timetable.html'">📅 View Timetable →</button>
+          </div>
+          <div class="canvas-container glass">
+            <canvas id="graphCanvas"></canvas>
+            <!-- Tooltip -->
+            <div id="tooltip" style="
+              position:absolute;top:0;left:0;
+              background:rgba(10,10,30,0.92);border:1px solid var(--c-border2);
+              border-radius:var(--r-sm);padding:10px 14px;
+              font-size:0.82rem;pointer-events:none;display:none;
+              backdrop-filter:blur(8px);max-width:220px;z-index:10;
+            "></div>
+          </div>
+        </div>
+
+        <!-- SIDEBAR -->
+        <div class="graph-sidebar">
+          <div class="glass side-card">
+            <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;color:var(--c-muted);text-transform:uppercase;margin-bottom:10px;">🎨 Slot Legend</div>
+            <div class="legend-list" id="legendList"></div>
+          </div>
+          <div class="glass side-card">
+            <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;color:var(--c-muted);text-transform:uppercase;margin-bottom:10px;">⚡ All Conflicts (<span id="edge-count">0</span>)</div>
+            <div class="conflict-scroll" id="conflictScroll"></div>
+          </div>
+          <div class="glass side-card" style="font-size:0.82rem;line-height:1.7;color:var(--c-muted);">
+            <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;color:var(--c-muted);text-transform:uppercase;margin-bottom:10px;">📐 Algorithm</div>
+            <p><strong style="color:var(--c-text)">Greedy Graph Coloring</strong></p>
+            <p>For each vertex: assign the smallest color not used by its neighbors.</p>
+            <p style="margin-top:8px;">Complexity: <strong style="color:var(--c-cyan)">O(V² + E)</strong></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-brand">🎓 VTU Graph Theory Mini Project</div>
+    <div class="footer-links"><a href="index.html">Home</a><a href="setup.html">Setup</a><a href="graph.html">Graph</a><a href="timetable.html">Timetable</a><a href="faculty.html">Faculty</a><a href="division.html">Division</a></div>
+    <div>Graph Coloring • Greedy Algorithm • Vanilla JS</div>
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="js/bg3d.js"></script>
+<script src="js/state.js"></script>
+<script>
+/* ── SLOT COLOR PALETTE (node fills) ── */
+const PALETTE = [
+  '#a855f7','#06b6d4','#10b981','#f59e0b',
+  '#f43f5e','#14b8a6','#8b5cf6','#ec4899',
+  '#3b82f6','#22c55e'
+];
+
+let state, conflicts, projNodes = [];
+
+function init() {
+  state     = APP.loadState();
+  conflicts = APP.detectConflicts(state);
+
+  const hasData = state.subjects.length > 0 && Object.keys(state.coloring).length > 0;
+  document.getElementById('noDataView').style.display = hasData ? 'none' : 'block';
+  document.getElementById('mainView').style.display   = hasData ? 'block' : 'none';
+
+  if (!hasData) return;
+
+  const slots = [...new Set(Object.values(state.coloring))];
+  document.getElementById('st-nodes').textContent = state.subjects.length;
+  document.getElementById('st-edges').textContent = conflicts.length;
+  document.getElementById('st-slots').textContent = slots.length;
+  document.getElementById('st-chr').textContent   = 'χ=' + slots.length;
+
+  buildLegend();
+  buildConflictList();
+  redraw();
+  setupTooltip();
+}
+
+/* ── LEGEND ── */
+function buildLegend() {
+  const slots = {};
+  Object.entries(state.coloring).forEach(([id, c]) => {
+    if (!slots[c]) slots[c] = [];
+    slots[c].push(APP.subjectName(state, id));
+  });
+  const el = document.getElementById('legendList');
+  el.innerHTML = Object.entries(slots).sort((a,b)=>a[0]-b[0]).map(([c, subs]) => `
+    <div class="legend-item">
+      <div class="legend-dot" style="background:${PALETTE[c%PALETTE.length]};box-shadow:0 0 8px ${PALETTE[c%PALETTE.length]}88;"></div>
+      <div class="legend-item-info">
+        <div class="legend-slot">Slot ${+c+1}</div>
+        <div class="legend-subs">${subs.join(', ')}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ── CONFLICT LIST ── */
+function buildConflictList() {
+  document.getElementById('edge-count').textContent = conflicts.length;
+  const el = document.getElementById('conflictScroll');
+  if (conflicts.length === 0) {
+    el.innerHTML = '<div style="font-size:0.82rem;color:var(--c-muted);font-style:italic;">No conflicts detected.</div>';
+    return;
+  }
+  el.innerHTML = conflicts.map(([a,b]) => {
+    const na = APP.subjectName(state,a), nb = APP.subjectName(state,b);
+    // Find reason
+    const teacherReasons = state.teachers
+      .filter(t=>(t.subjects||[]).includes(a)&&(t.subjects||[]).includes(b))
+      .map(t=>t.name);
+    const divReasons = state.divisions
+      .filter(d=>(d.subjects||[]).includes(a)&&(d.subjects||[]).includes(b))
+      .map(d=>d.name);
+    const reasons = [...teacherReasons.map(r=>`Teacher: ${r}`),...divReasons.map(r=>`Div: ${r}`)];
+    return `<div class="ci">
+      <span>⚡</span>
+      <div>
+        <div>${na} ↔ ${nb}</div>
+        ${reasons.length?`<div class="ci-reason">${reasons.join(' | ')}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ── CANVAS GRAPH ── */
+function redraw() {
+  const canvas = document.getElementById('graphCanvas');
+  const container = canvas.parentElement;
+  const size = Math.min(container.clientWidth || 680, container.clientHeight || 680, 680);
+  canvas.width = size; canvas.height = size;
+
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, size, size);
+
+  const n = state.subjects.length;
+  if (n === 0) return;
+
+  const cx = size/2, cy = size/2;
+  const R  = size * 0.36;
+  const nr = Math.max(22, Math.min(36, size * 0.055));
+
+  /* Layout: circle with optional inner ring for large graphs */
+  const positions = {};
+  state.subjects.forEach((s, i) => {
+    const angle = (2*Math.PI*i/n) - Math.PI/2;
+    positions[s.id] = { x: cx + R*Math.cos(angle), y: cy + R*Math.sin(angle) };
+  });
+  projNodes = state.subjects.map(s => ({ ...positions[s.id], id: s.id, name: s.name, r: nr }));
+
+  /* Draw edges */
+  conflicts.forEach(([a, b]) => {
+    const pa = positions[a], pb = positions[b];
+    if (!pa || !pb) return;
+    ctx.beginPath();
+    ctx.moveTo(pa.x, pa.y);
+    // Slightly curved
+    const mx = (pa.x+pb.x)/2, my = (pa.y+pb.y)/2;
+    const dx = pb.y-pa.y, dy = pa.x-pb.x;
+    const d  = Math.sqrt(dx*dx+dy*dy)||1;
+    const cx2 = mx + (dx/d)*20, cy2 = my + (dy/d)*20;
+    ctx.quadraticCurveTo(cx2, cy2, pb.x, pb.y);
+    ctx.strokeStyle = 'rgba(244,63,94,0.35)';
+    ctx.lineWidth   = 1.5;
+    ctx.setLineDash([5,4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  });
+
+  /* Draw nodes */
+  state.subjects.forEach(s => {
+    const p = positions[s.id];
+    const colorIdx = state.coloring[s.id] ?? 0;
+    const color = PALETTE[colorIdx % PALETTE.length];
+
+    // Glow
+    const grd = ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,nr*2.2);
+    grd.addColorStop(0, color+'66');
+    grd.addColorStop(1, color+'00');
+    ctx.beginPath(); ctx.arc(p.x,p.y,nr*2.2,0,Math.PI*2);
+    ctx.fillStyle = grd; ctx.fill();
+
+    // Circle
+    ctx.beginPath(); ctx.arc(p.x,p.y,nr,0,Math.PI*2);
+    ctx.fillStyle = color; ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.lineWidth=2; ctx.stroke();
+
+    // Label
+    const label = s.name.length>8 ? s.name.slice(0,7)+'…' : s.name;
+    ctx.fillStyle='#fff';
+    ctx.font=`bold ${Math.max(10,nr*0.38)}px 'Segoe UI',sans-serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(label, p.x, p.y);
+
+    // Slot badge
+    ctx.fillStyle='rgba(255,255,255,0.6)';
+    ctx.font=`${Math.max(9,nr*0.28)}px 'Segoe UI',sans-serif`;
+    ctx.textBaseline='top';
+    ctx.fillText(`Slot ${colorIdx+1}`, p.x, p.y+nr+5);
+  });
+}
+
+/* ── TOOLTIP on hover ── */
+function setupTooltip() {
+  const canvas  = document.getElementById('graphCanvas');
+  const tooltip = document.getElementById('tooltip');
+
+  canvas.addEventListener('mousemove', e => {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width  / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const mx = (e.clientX - rect.left) * scaleX;
+    const my = (e.clientY - rect.top)  * scaleY;
+
+    let hit = null;
+    for (const n of projNodes) {
+      const dx = mx-n.x, dy = my-n.y;
+      if (Math.sqrt(dx*dx+dy*dy) < n.r+6) { hit=n; break; }
+    }
+
+    if (hit) {
+      const colorIdx = state.coloring[hit.id] ?? 0;
+      const teachers = APP.subjectTeachers(state, hit.id);
+      const divs     = APP.subjectDivisions(state, hit.id);
+      const neighborNames = conflicts
+        .filter(([a,b])=>a===hit.id||b===hit.id)
+        .map(([a,b])=>APP.subjectName(state, a===hit.id?b:a));
+      tooltip.innerHTML = `
+        <div style="font-weight:700;margin-bottom:6px;color:${PALETTE[colorIdx%PALETTE.length]}">${hit.name}</div>
+        <div style="margin-bottom:3px;">🕐 <strong>Slot ${colorIdx+1}</strong></div>
+        ${teachers.length?`<div style="margin-bottom:3px;">👨‍🏫 ${teachers.join(', ')}</div>`:''}
+        ${divs.length?`<div style="margin-bottom:3px;">🏫 ${divs.join(', ')}</div>`:''}
+        ${neighborNames.length?`<div style="color:var(--c-muted);">⚡ Conflicts with: ${neighborNames.join(', ')}</div>`:'<div style="color:var(--c-muted);">No conflicts</div>'}
+      `;
+      tooltip.style.display = 'block';
+      const tx = Math.min(e.clientX - rect.left + 12, rect.width - 230);
+      const ty = Math.min(e.clientY - rect.top  + 12, rect.height - 140);
+      tooltip.style.left = tx + 'px';
+      tooltip.style.top  = ty + 'px';
+      canvas.style.cursor = 'pointer';
+    } else {
+      tooltip.style.display = 'none';
+      canvas.style.cursor = 'grab';
+    }
+  });
+
+  canvas.addEventListener('mouseleave', () => { tooltip.style.display='none'; });
+}
+
+window.addEventListener('resize', () => { if(state && Object.keys(state.coloring).length) redraw(); });
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

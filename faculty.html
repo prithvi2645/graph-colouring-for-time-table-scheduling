@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Faculty Weekly Schedule — Graph Coloring Scheduler</title>
+<link rel="stylesheet" href="css/style.css"/>
+<style>
+/* ══════════════════════════════════════════
+   FACULTY PAGE STYLES
+══════════════════════════════════════════ */
+
+/* ── Faculty Selector Grid ── */
+.faculty-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 40px;
+}
+.faculty-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: var(--r-lg);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  cursor: pointer;
+  transition: all var(--t);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  animation: fadeUp 0.3s ease both;
+}
+.faculty-card:hover {
+  border-color: var(--c-border2);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 32px rgba(0,0,0,0.4);
+}
+.faculty-card.active {
+  border-color: var(--c-purple);
+  background: rgba(168,85,247,0.12);
+  box-shadow: 0 8px 28px rgba(168,85,247,0.3);
+}
+.fac-avatar {
+  width: 46px; height: 46px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; font-weight: 900; color: #fff; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--c-purple), var(--c-indigo));
+  box-shadow: 0 4px 14px rgba(168,85,247,0.45);
+  letter-spacing: -0.02em;
+}
+.faculty-card.active .fac-avatar {
+  background: linear-gradient(135deg, var(--c-cyan), var(--c-green));
+  box-shadow: 0 4px 14px rgba(6,182,212,0.45);
+}
+.fac-info-name { font-weight: 700; font-size: 0.88rem; line-height: 1.2; }
+.fac-info-sub  { font-size: 0.72rem; color: var(--c-muted); margin-top: 3px; }
+
+/* ── Faculty Header Banner ── */
+.fac-banner {
+  display: flex; align-items: center; gap: 22px; flex-wrap: wrap;
+  padding: 24px 28px; border-radius: var(--r-xl); margin-bottom: 24px;
+  background: var(--c-surface); border: 1px solid var(--c-border);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+}
+.fac-banner-avatar {
+  width: 68px; height: 68px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; font-weight: 900; color: #fff; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--c-purple), var(--c-cyan));
+  box-shadow: 0 8px 24px rgba(168,85,247,0.5);
+}
+.fac-banner-name  { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; }
+.fac-banner-subs  { font-size: 0.85rem; color: var(--c-muted); margin-top: 3px; }
+.fac-banner-right { margin-left: auto; display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* ── Stat Badges ── */
+.stat-band {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px; margin-bottom: 32px;
+}
+.stat-badge {
+  padding: 18px 14px; border-radius: var(--r-lg);
+  background: var(--c-surface); border: 1px solid var(--c-border);
+  backdrop-filter: blur(10px); text-align: center;
+  transition: transform var(--t), border-color var(--t);
+}
+.stat-badge:hover { transform: translateY(-3px); border-color: var(--c-border2); }
+.stat-badge-num   { font-size: 2rem; font-weight: 900; line-height: 1; letter-spacing: -0.04em; margin-bottom: 4px; }
+.stat-badge-label { font-size: 0.68rem; color: var(--c-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+
+/* ══════════════════════════════════════════
+   WEEKLY SCHEDULE TABLE
+══════════════════════════════════════════ */
+.schedule-wrap { overflow-x: auto; margin-bottom: 40px; }
+.schedule-table {
+  width: 100%; border-collapse: separate; border-spacing: 3px;
+  min-width: 860px;
+}
+
+/* Column headers (day names) */
+.schedule-table th {
+  padding: 12px 8px; text-align: center;
+  font-size: 0.72rem; font-weight: 800;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  border-radius: var(--r-sm); white-space: nowrap;
+}
+.th-time-col {
+  background: rgba(168,85,247,0.08);
+  border: 1px solid rgba(168,85,247,0.18);
+  color: var(--c-purple);
+  width: 145px; text-align: left; padding-left: 12px;
+}
+.th-day {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  color: var(--c-text);
+  min-width: 120px;
+}
+.th-day.today {
+  background: rgba(6,182,212,0.1);
+  border-color: rgba(6,182,212,0.3);
+  color: var(--c-cyan);
+}
+
+/* ── Period rows ── */
+.schedule-table td { padding: 3px; vertical-align: stretch; }
+
+/* Time label cell */
+.td-time {
+  padding: 0 !important;
+}
+.time-label {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+  height: 100%;
+  display: flex; flex-direction: column; justify-content: center;
+}
+.time-period-num {
+  font-size: 0.68rem; font-weight: 800; color: var(--c-purple);
+  text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px;
+}
+.time-clock {
+  font-size: 0.78rem; font-weight: 700; color: var(--c-text);
+  line-height: 1.3;
+}
+.time-sub {
+  font-size: 0.64rem; color: var(--c-muted); margin-top: 1px;
+}
+
+/* Free period cell */
+.td-free {
+  background: rgba(255,255,255,0.015);
+  border: 1px dashed rgba(255,255,255,0.06);
+  border-radius: var(--r-sm);
+  display: flex; align-items: center; justify-content: center;
+  min-height: 80px;
+}
+.free-text {
+  font-size: 0.64rem; color: rgba(255,255,255,0.15);
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+
+/* Class cell */
+.class-cell {
+  min-height: 80px; height: 100%;
+  border-radius: var(--r-sm);
+  padding: 10px 11px;
+  color: #fff;
+  display: flex; flex-direction: column; justify-content: space-between;
+  cursor: default;
+  transition: transform var(--t), box-shadow var(--t), filter var(--t);
+  position: relative; overflow: hidden;
+  animation: popIn 0.3s ease both;
+}
+.class-cell::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: rgba(255,255,255,0.07);
+  pointer-events: none;
+}
+.class-cell:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  z-index: 5; filter: brightness(1.1);
+}
+.cc-slot {
+  font-size: 0.58rem; font-weight: 800; opacity: 0.6;
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+.cc-subject {
+  font-size: 0.82rem; font-weight: 800; line-height: 1.25;
+  margin: 4px 0;
+}
+.cc-divs {
+  font-size: 0.67rem; opacity: 0.85; line-height: 1.3;
+}
+
+/* ── Break rows ── */
+.break-row td {
+  padding: 2px 3px;
+}
+.break-cell {
+  border-radius: var(--r-sm);
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 7px 12px;
+  font-size: 0.72rem; font-weight: 700;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+.break-time-cell {
+  background: rgba(245,158,11,0.07);
+  border: 1px solid rgba(245,158,11,0.18);
+  border-radius: var(--r-sm);
+  padding: 7px 12px;
+}
+.break-time-label { font-size: 0.7rem; font-weight: 800; color: var(--c-amber); }
+.break-time-sub   { font-size: 0.62rem; color: var(--c-muted); }
+.break-span-cell {
+  background: rgba(245,158,11,0.05);
+  border: 1px solid rgba(245,158,11,0.12);
+  border-radius: var(--r-sm);
+  padding: 7px 0;
+}
+.break-inner {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  color: rgba(245,158,11,0.6); font-size: 0.7rem; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase;
+}
+
+/* ══════════════════════════════════════════
+   DAY-BY-DAY SUMMARY
+══════════════════════════════════════════ */
+.day-summary-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px; margin-top: 16px;
+}
+.day-summary-card {
+  border-radius: var(--r-lg);
+  background: var(--c-surface); border: 1px solid var(--c-border);
+  backdrop-filter: blur(12px); overflow: hidden;
+  transition: transform var(--t), border-color var(--t);
+}
+.day-summary-card:hover { transform: translateY(-3px); border-color: var(--c-border2); }
+.day-summary-card.busy-day {
+  border-color: rgba(168,85,247,0.25);
+}
+.day-card-head {
+  padding: 12px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--c-border);
+}
+.day-card-head.is-today {
+  background: rgba(6,182,212,0.08); border-bottom-color: rgba(6,182,212,0.2);
+}
+.day-name   { font-weight: 800; font-size: 0.92rem; }
+.day-count  { font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 50px;
+              background: rgba(168,85,247,0.15); color: var(--c-purple); }
+.day-count.zero { background: rgba(255,255,255,0.04); color: var(--c-muted); }
+.day-card-body { padding: 12px 16px; }
+.period-row-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.period-row-item:last-child { border: none; }
+.pri-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px;
+}
+.pri-period { font-size: 0.7rem; color: var(--c-muted); font-weight: 700; min-width: 24px; }
+.pri-content { flex: 1; }
+.pri-subject { font-size: 0.85rem; font-weight: 700; }
+.pri-time    { font-size: 0.72rem; color: var(--c-muted); margin-top: 1px; }
+.pri-divs    { font-size: 0.72rem; color: var(--c-muted); margin-top: 1px; }
+.no-class-day { font-size: 0.82rem; color: var(--c-muted); font-style: italic; padding: 8px 0; }
+
+/* ── No data state ── */
+.no-data { display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:80px 40px;text-align:center;gap:16px; }
+.no-data-icon { font-size:4rem;opacity:0.3; }
+
+/* Print */
+@media print {
+  #bg3d,.bg-overlay,.nav,footer,.no-print { display:none!important; }
+  body { background:#fff; color:#000; }
+  .class-cell { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .schedule-table { font-size:0.75rem; }
+  .schedule-wrap { overflow:visible; }
+  .schedule-table { min-width:0; }
+}
+
+@media(max-width:640px) {
+  .fac-banner { flex-direction:column; align-items:flex-start; }
+  .fac-banner-right { margin-left:0; }
+}
+</style>
+</head>
+<body>
+<canvas id="bg3d"></canvas>
+<div class="bg-overlay"></div>
+
+<div class="page-wrap">
+  <nav class="nav">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-dot">GC</div><span>GraphScheduler</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html"     class="nav-link">Home</a>
+      <a href="setup.html"     class="nav-link">Setup</a>
+      <a href="graph.html"     class="nav-link">Graph</a>
+      <a href="timetable.html" class="nav-link">Timetable</a>
+      <a href="faculty.html"   class="nav-link active">Faculty</a>
+      <a href="division.html" class="nav-link">Division</a>
+    </div>
+  </nav>
+
+  <div class="container" style="padding-bottom:80px;">
+
+    <div style="padding:32px 0 24px;">
+      <div class="section-label" style="margin-bottom:12px;">👨‍🏫 Faculty Weekly Schedule</div>
+      <h1 class="section-title anim-up">Weekly <span class="grad-purple">Faculty Timetable</span></h1>
+      <p class="section-sub anim-up delay-1">
+        Select a faculty member to view their complete weekly schedule —
+        6 days × 6 periods (10 AM – 5 PM) with exact time slots, breaks, and assigned class divisions.
+      </p>
+    </div>
+
+    <!-- NO DATA -->
+    <div id="noDataView" class="glass" style="display:none;margin-bottom:40px;">
+      <div class="no-data">
+        <div class="no-data-icon">👨‍🏫</div>
+        <h3>No timetable generated yet</h3>
+        <p>Go to Setup, add subjects, teachers & divisions, then generate the timetable to see faculty schedules.</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:8px;">
+          <a href="setup.html"     class="btn btn-primary">⚙️ Go to Setup</a>
+          <a href="timetable.html" class="btn btn-ghost">📅 View Timetable</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN VIEW -->
+    <div id="mainView" style="display:none;">
+
+      <!-- FACULTY SELECTOR -->
+      <div class="section-label no-print" style="margin-bottom:12px;">Select Faculty Member</div>
+      <div class="faculty-grid no-print" id="facultyGrid"></div>
+
+      <!-- SCHEDULE PANEL (shown after selection) -->
+      <div id="schedulePanel" style="display:none;">
+
+        <!-- BANNER -->
+        <div class="fac-banner anim-up">
+          <div class="fac-banner-avatar" id="fv-avatar"></div>
+          <div>
+            <div class="fac-banner-name" id="fv-name"></div>
+            <div class="fac-banner-subs" id="fv-subjects"></div>
+          </div>
+          <div class="fac-banner-right no-print">
+            <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨️ Print Schedule</button>
+            <a href="timetable.html" class="btn btn-primary btn-sm">📅 Full Timetable</a>
+          </div>
+        </div>
+
+        <!-- STATS -->
+        <div class="stat-band anim-up delay-1" id="fv-stats"></div>
+
+        <!-- WEEKLY GRID TABLE -->
+        <div class="section-label" style="margin-bottom:10px;">📅 Weekly Schedule Grid</div>
+        <div class="glass" style="padding:16px;margin-bottom:32px;">
+          <!-- Schedule legend row -->
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;font-size:0.75rem;color:var(--c-muted);align-items:center;">
+            <span>🕐 <strong style="color:var(--c-text)">6 days</strong> Mon – Sat</span>
+            <span>📚 <strong style="color:var(--c-text)">6 periods</strong> per day</span>
+            <span>☕ <strong style="color:var(--c-text)">2 breaks</strong> included</span>
+            <span style="margin-left:auto;font-style:italic;">Hover cells for details</span>
+          </div>
+          <div class="schedule-wrap">
+            <table class="schedule-table" id="weekTable">
+              <thead id="weekHead"></thead>
+              <tbody id="weekBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- DAY-BY-DAY SUMMARY -->
+        <div class="section-label" style="margin-bottom:12px;">🗓️ Day-by-Day Summary</div>
+        <div class="glass" style="padding:20px 24px;margin-bottom:32px;">
+          <div class="day-summary-grid" id="daySummary"></div>
+        </div>
+
+        <!-- SUBJECT BREAKDOWN TABLE -->
+        <div class="section-label" style="margin-bottom:12px;">📚 Subject Assignment Breakdown</div>
+        <div class="glass" style="padding:20px 24px;margin-bottom:32px;">
+          <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:0.85rem;" id="subBreakdown">
+              <thead>
+                <tr>
+                  <th style="padding:10px 14px;text-align:left;border-bottom:1px solid var(--c-border);color:var(--c-muted);font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Subject</th>
+                  <th style="padding:10px 14px;text-align:left;border-bottom:1px solid var(--c-border);color:var(--c-muted);font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Slot</th>
+                  <th style="padding:10px 14px;text-align:left;border-bottom:1px solid var(--c-border);color:var(--c-muted);font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Day</th>
+                  <th style="padding:10px 14px;text-align:left;border-bottom:1px solid var(--c-border);color:var(--c-muted);font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Period</th>
+                  <th style="padding:10px 14px;text-align:left;border-bottom:1px solid var(--c-border);color:var(--c-muted);font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Time</th>
+                  <th style="padding:10px 14px;text-align:left;border-bottom:1px solid var(--c-border);color:var(--c-muted);font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Divisions</th>
+                  <th style="padding:10px 14px;text-align:left;border-bottom:1px solid var(--c-border);color:var(--c-muted);font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Status</th>
+                </tr>
+              </thead>
+              <tbody id="subBreakdownBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /schedulePanel -->
+    </div><!-- /mainView -->
+  </div><!-- /container -->
+
+  <footer class="footer">
+    <div class="footer-brand">🎓 VTU Graph Theory Mini Project</div>
+    <div class="footer-links">
+      <a href="index.html">Home</a><a href="setup.html">Setup</a>
+      <a href="graph.html">Graph</a><a href="timetable.html">Timetable</a>
+      <a href="faculty.html">Faculty</a>
+      <a href="division.html">Division</a>
+    </div>
+    <div>Graph Coloring • Greedy Algorithm • Vanilla JS</div>
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="js/bg3d.js"></script>
+<script src="js/state.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════
+   SLOT COLOR PALETTE
+═══════════════════════════════════════════════════ */
+const SLOT_COLORS_HEX = [
+  '#7c3aed','#0284c7','#059669','#d97706',
+  '#e11d48','#0d9488','#6d28d9','#be185d',
+  '#1e40af','#166534','#92400e','#7f1d1d',
+];
+const SLOT_GRADIENTS = [
+  'linear-gradient(140deg,#7c3aed,#a855f7)',
+  'linear-gradient(140deg,#0284c7,#06b6d4)',
+  'linear-gradient(140deg,#059669,#10b981)',
+  'linear-gradient(140deg,#d97706,#f59e0b)',
+  'linear-gradient(140deg,#e11d48,#f43f5e)',
+  'linear-gradient(140deg,#0d9488,#14b8a6)',
+  'linear-gradient(140deg,#6d28d9,#8b5cf6)',
+  'linear-gradient(140deg,#be185d,#ec4899)',
+  'linear-gradient(140deg,#1e40af,#3b82f6)',
+  'linear-gradient(140deg,#166534,#22c55e)',
+  'linear-gradient(140deg,#92400e,#f59e0b)',
+  'linear-gradient(140deg,#7f1d1d,#ef4444)',
+];
+
+/* ─── Short day names ─── */
+const DAY_SHORT = { Monday:'Mon', Tuesday:'Tue', Wednesday:'Wed', Thursday:'Thu', Friday:'Fri', Saturday:'Sat' };
+
+/* ─── Toast ─── */
+function toast(msg, type='success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = `toast show ${type}`;
+  clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), 3200);
+}
+
+/* ─── Initials from name ─── */
+function initials(name) {
+  return name.split(/\s+/).map(w => w[0] || '').join('').toUpperCase().slice(0, 2);
+}
+
+let state = null;
+
+/* ═══════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════ */
+function init() {
+  state = APP.loadState();
+  const hasData = state.subjects.length > 0 && Object.keys(state.coloring).length > 0;
+  document.getElementById('noDataView').style.display = hasData ? 'none' : 'block';
+  document.getElementById('mainView').style.display   = hasData ? 'block' : 'none';
+  if (!hasData) return;
+
+  renderFacultyGrid();
+
+  // Auto-select first teacher
+  if (state.teachers.length > 0) {
+    selectFaculty(state.teachers[0].id);
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   FACULTY SELECTOR GRID
+═══════════════════════════════════════════════════ */
+function renderFacultyGrid() {
+  const container = document.getElementById('facultyGrid');
+  if (state.teachers.length === 0) {
+    container.innerHTML = '<div style="color:var(--c-muted);font-size:0.88rem;padding:16px;">No teachers added. <a href="setup.html" style="color:var(--c-purple);">Go to Setup →</a></div>';
+    return;
+  }
+  container.innerHTML = state.teachers.map((t, i) => {
+    const subCount = (t.subjects || []).length;
+    return `<div class="faculty-card" id="fc-${t.id}" onclick="selectFaculty('${t.id}')"
+                 style="animation-delay:${i * 0.05}s">
+      <div class="fac-avatar">${initials(t.name)}</div>
+      <div>
+        <div class="fac-info-name">${t.name}</div>
+        <div class="fac-info-sub">${subCount} subject${subCount !== 1 ? 's' : ''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ═══════════════════════════════════════════════════
+   SELECT A FACULTY MEMBER
+═══════════════════════════════════════════════════ */
+function selectFaculty(teacherId) {
+  // Highlight card
+  document.querySelectorAll('.faculty-card').forEach(c => c.classList.remove('active'));
+  const card = document.getElementById(`fc-${teacherId}`);
+  if (card) { card.classList.add('active'); card.scrollIntoView({ behavior:'smooth', block:'nearest' }); }
+
+  const teacher = state.teachers.find(t => t.id === teacherId);
+  if (!teacher) return;
+
+  // Show panel
+  document.getElementById('schedulePanel').style.display = 'block';
+
+  // Banner
+  document.getElementById('fv-avatar').textContent = initials(teacher.name);
+  const subNames = (teacher.subjects || []).map(id => APP.subjectName(state, id)).join(', ') || 'No subjects assigned';
+  document.getElementById('fv-name').textContent    = teacher.name;
+  document.getElementById('fv-subjects').textContent = '📚 ' + subNames;
+
+  // Build schedule data
+  const numSlots   = new Set(Object.values(state.coloring)).size;
+  const schedule   = APP.buildSchedule(numSlots);
+
+  // Gather this teacher's periods
+  const myPeriods = buildMyPeriods(teacher, schedule);
+
+  renderStats(teacher, myPeriods, numSlots);
+  renderWeekTable(teacher, myPeriods, schedule);
+  renderDaySummary(teacher, myPeriods);
+  renderSubjectBreakdown(teacher, schedule);
+}
+
+/* ─── Build list of {subjectId, day, period, timeLabel, slot, divisions} for this teacher ─── */
+function buildMyPeriods(teacher, schedule) {
+  const result = [];
+  (teacher.subjects || []).forEach(subId => {
+    const slot = state.coloring[subId];
+    if (slot === undefined) return;
+    const sch  = schedule[slot];
+    if (!sch) return;
+    result.push({
+      subjectId:   subId,
+      subjectName: APP.subjectName(state, subId),
+      slot,
+      day:         sch.day,
+      dayIndex:    sch.dayIndex,
+      period:      sch.period,
+      timeLabel:   sch.timeLabel,
+      short:       sch.short,
+      divisions:   APP.subjectDivisions(state, subId),
+    });
+  });
+  return result;
+}
+
+/* ═══════════════════════════════════════════════════
+   STATS BAND
+═══════════════════════════════════════════════════ */
+function renderStats(teacher, myPeriods, numSlots) {
+  const busyDays  = new Set(myPeriods.map(p => p.day)).size;
+  const totalSubs = (teacher.subjects || []).length;
+  const conflicts = APP.detectConflicts(state)
+    .filter(([a,b]) => (teacher.subjects||[]).includes(a) || (teacher.subjects||[]).includes(b)).length;
+  const freeDays  = APP.DAYS.length - busyDays;
+
+  document.getElementById('fv-stats').innerHTML = `
+    <div class="stat-badge"><div class="stat-badge-num grad-purple">${totalSubs}</div><div class="stat-badge-label">Subjects</div></div>
+    <div class="stat-badge"><div class="stat-badge-num grad-cyan">${totalSubs}</div><div class="stat-badge-label">Periods/Week</div></div>
+    <div class="stat-badge"><div class="stat-badge-num" style="color:var(--c-green)">${busyDays}</div><div class="stat-badge-label">Busy Days</div></div>
+    <div class="stat-badge"><div class="stat-badge-num" style="color:var(--c-amber)">${freeDays}</div><div class="stat-badge-label">Free Days</div></div>
+    <div class="stat-badge"><div class="stat-badge-num" style="color:var(--c-red)">0</div><div class="stat-badge-label">Clashes</div></div>
+    <div class="stat-badge"><div class="stat-badge-num" style="color:var(--c-indigo)">${numSlots}</div><div class="stat-badge-label">Total Slots</div></div>
+  `;
+}
+
+/* ═══════════════════════════════════════════════════
+   WEEKLY SCHEDULE TABLE
+   Rows  = 6 periods + 2 break rows (inserted after P2, P4)
+   Cols  = Time label + Mon Tue Wed Thu Fri Sat
+═══════════════════════════════════════════════════ */
+function renderWeekTable(teacher, myPeriods, schedule) {
+  const today = new Date().toLocaleDateString('en-US', { weekday:'long' });
+
+  /* Build lookup: day → period → class info */
+  const lookup = {};
+  APP.DAYS.forEach(d => { lookup[d] = {}; });
+  myPeriods.forEach(p => {
+    if (!lookup[p.day][p.period]) lookup[p.day][p.period] = [];
+    lookup[p.day][p.period].push(p);
+  });
+
+  /* ── Header ── */
+  const headHTML = `<tr>
+    <th class="th-time-col">⏰ Period / Day</th>
+    ${APP.DAYS.map(d =>
+      `<th class="th-day${d === today ? ' today' : ''}">${DAY_SHORT[d] || d}${d === today ? ' 📍' : ''}</th>`
+    ).join('')}
+  </tr>`;
+  document.getElementById('weekHead').innerHTML = headHTML;
+
+  /* ── Body: 6 period rows + 2 break rows ── */
+  const rows = [];
+
+  APP.PERIOD_TIMES.forEach((pt, idx) => {
+    /* Period row */
+    const cells = APP.DAYS.map(day => {
+      const classes = lookup[day][pt.period];
+      if (!classes || classes.length === 0) {
+        return `<td><div class="td-free"><span class="free-text">Free</span></div></td>`;
+      }
+      const classHTML = classes.map(c => {
+        const bg = SLOT_GRADIENTS[c.slot % SLOT_GRADIENTS.length];
+        const divStr = c.divisions.length ? c.divisions.join(', ') : '—';
+        return `<div class="class-cell" style="background:${bg}"
+                     title="${c.subjectName} | ${divStr} | ${c.timeLabel}">
+          <div class="cc-slot">Slot ${c.slot + 1}</div>
+          <div class="cc-subject">${c.subjectName}</div>
+          <div class="cc-divs">🏫 ${divStr}</div>
+        </div>`;
+      }).join('');
+      return `<td>${classHTML}</td>`;
+    }).join('');
+
+    rows.push(`<tr>
+      <td class="td-time">
+        <div class="time-label">
+          <div class="time-period-num">Period ${pt.period}</div>
+          <div class="time-clock">${pt.label.split(' – ')[0]}<br/>to ${pt.label.split(' – ')[1]}</div>
+          <div class="time-sub">55 min</div>
+        </div>
+      </td>
+      ${cells}
+    </tr>`);
+
+    /* Insert break row AFTER period 2 and AFTER period 4 */
+    const brk = APP.BREAKS.find(b => b.afterPeriod === pt.period);
+    if (brk) {
+      rows.push(`<tr class="break-row">
+        <td class="td-time">
+          <div class="break-time-cell">
+            <div class="break-time-label">${brk.label}</div>
+            <div class="break-time-sub">${brk.time}</div>
+            <div class="break-time-sub">${brk.duration}</div>
+          </div>
+        </td>
+        <td colspan="6">
+          <div class="break-span-cell">
+            <div class="break-inner">
+              ──────── &nbsp; ${brk.label} &nbsp; ${brk.time} &nbsp; (${brk.duration}) &nbsp; ────────
+            </div>
+          </div>
+        </td>
+      </tr>`);
+    }
+  });
+
+  document.getElementById('weekBody').innerHTML = rows.join('');
+}
+
+/* ═══════════════════════════════════════════════════
+   DAY-BY-DAY SUMMARY CARDS
+═══════════════════════════════════════════════════ */
+function renderDaySummary(teacher, myPeriods) {
+  const today = new Date().toLocaleDateString('en-US', { weekday:'long' });
+
+  /* Group by day */
+  const byDay = {};
+  APP.DAYS.forEach(d => { byDay[d] = []; });
+  myPeriods.forEach(p => { byDay[p.day].push(p); });
+
+  const cards = APP.DAYS.map(day => {
+    const items = byDay[day].sort((a,b) => a.period - b.period);
+    const isToday = day === today;
+    const isBusy  = items.length > 0;
+
+    const bodyContent = items.length === 0
+      ? `<div class="no-class-day">No classes scheduled</div>`
+      : items.map(p => {
+          const color = SLOT_COLORS_HEX[p.slot % SLOT_COLORS_HEX.length];
+          const divStr = p.divisions.length ? p.divisions.join(', ') : '—';
+          return `<div class="period-row-item">
+            <div class="pri-dot" style="background:${color};box-shadow:0 0 6px ${color}88;"></div>
+            <div class="pri-period">P${p.period}</div>
+            <div class="pri-content">
+              <div class="pri-subject">${p.subjectName}</div>
+              <div class="pri-time">🕐 ${p.timeLabel}</div>
+              <div class="pri-divs">🏫 ${divStr}</div>
+            </div>
+          </div>`;
+        }).join('');
+
+    return `<div class="day-summary-card${isBusy ? ' busy-day' : ''}">
+      <div class="day-card-head${isToday ? ' is-today' : ''}">
+        <div class="day-name">${isToday ? '📍 ' : ''}${day}${isToday ? ' (Today)' : ''}</div>
+        <div class="day-count${items.length === 0 ? ' zero' : ''}">
+          ${items.length} class${items.length !== 1 ? 'es' : ''}
+        </div>
+      </div>
+      <div class="day-card-body">${bodyContent}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('daySummary').innerHTML = cards;
+}
+
+/* ═══════════════════════════════════════════════════
+   SUBJECT BREAKDOWN TABLE
+═══════════════════════════════════════════════════ */
+function renderSubjectBreakdown(teacher, schedule) {
+  const subs = teacher.subjects || [];
+  const conflicts = APP.detectConflicts(state);
+
+  const rows = subs.map(id => {
+    const slot   = state.coloring[id] ?? 0;
+    const sch    = schedule[slot];
+    const color  = SLOT_COLORS_HEX[slot % SLOT_COLORS_HEX.length];
+    const divs   = APP.subjectDivisions(state, id);
+    const clash  = conflicts.filter(([a,b]) => a===id || b===id)
+                             .map(([a,b]) => APP.subjectName(state, a===id?b:a));
+
+    return `<tr style="border-bottom:1px solid var(--c-border);transition:background var(--t);"
+                onmouseover="this.style.background='rgba(255,255,255,0.03)'"
+                onmouseout="this.style.background=''">
+      <td style="padding:12px 14px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:10px;height:10px;border-radius:50%;background:${color};box-shadow:0 0 8px ${color}88;flex-shrink:0;"></div>
+          <strong>${APP.subjectName(state, id)}</strong>
+        </div>
+      </td>
+      <td style="padding:12px 14px;">
+        <span style="display:inline-block;padding:3px 10px;border-radius:50px;font-size:0.75rem;font-weight:700;
+                     background:${color}22;border:1px solid ${color}55;color:${color};">
+          Slot ${slot + 1}
+        </span>
+      </td>
+      <td style="padding:12px 14px;font-weight:600;">${sch ? sch.day : '—'}</td>
+      <td style="padding:12px 14px;">
+        <span style="font-weight:700;color:var(--c-text)">Period ${sch ? sch.period : '?'}</span>
+      </td>
+      <td style="padding:12px 14px;color:var(--c-muted);font-size:0.83rem;">
+        ${sch ? sch.timeLabel : '—'}
+      </td>
+      <td style="padding:12px 14px;color:var(--c-muted);font-size:0.83rem;">
+        ${divs.length ? divs.map(d=>`<span style="display:inline-block;padding:2px 8px;border-radius:50px;
+          font-size:0.72rem;font-weight:600;background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.25);
+          color:var(--c-cyan);margin:1px;">${d}</span>`).join('') : '<span style="opacity:0.4">—</span>'}
+      </td>
+      <td style="padding:12px 14px;">
+        ${clash.length === 0
+          ? `<span style="color:var(--c-green);font-size:0.8rem;font-weight:700;">✅ No conflicts</span>`
+          : `<span style="color:var(--c-red);font-size:0.78rem;">⚡ ${clash.join(', ')}</span>`}
+      </td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('subBreakdownBody').innerHTML =
+    rows || '<tr><td colspan="7" style="padding:20px;color:var(--c-muted);text-align:center;font-style:italic;">No subjects assigned to this teacher.</td></tr>';
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

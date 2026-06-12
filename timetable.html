@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Timetable — Graph Coloring Scheduler</title>
+<link rel="stylesheet" href="css/style.css"/>
+<style>
+/* ── TOP STATS ── */
+.stats-banner{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;
+  margin-bottom:40px;
+}
+.stat-card{
+  padding:22px 20px;border-radius:var(--r-lg);
+  background:var(--c-surface);border:1px solid var(--c-border);
+  backdrop-filter:blur(12px);text-align:center;
+  transition:transform var(--t),border-color var(--t);
+}
+.stat-card:hover{transform:translateY(-4px);border-color:var(--c-border2);}
+.stat-card-num{font-size:2.6rem;font-weight:900;line-height:1;letter-spacing:-0.04em;margin-bottom:6px;}
+.stat-card-label{font-size:0.75rem;color:var(--c-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;}
+
+/* ── TIMETABLE GRID ── */
+.tt-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:20px;margin-bottom:48px;
+}
+.tt-slot{
+  border-radius:var(--r-xl);padding:26px 22px;
+  color:#fff;animation:popIn 0.35s ease both;
+  transition:transform var(--t),box-shadow var(--t);
+  position:relative;overflow:hidden;
+}
+.tt-slot::before{
+  content:'';position:absolute;inset:0;
+  background:rgba(255,255,255,0.06);
+  border-radius:var(--r-xl);
+}
+.tt-slot:hover{transform:translateY(-6px);box-shadow:0 20px 48px rgba(0,0,0,0.5);}
+.tt-slot-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:16px;position:relative;z-index:1;
+}
+.tt-slot-label{font-size:0.72rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;opacity:0.75;}
+.tt-slot-badge{
+  width:44px;height:44px;border-radius:50%;
+  background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.35);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.2rem;font-weight:900;
+}
+.tt-slot-num{font-size:3rem;font-weight:900;letter-spacing:-0.04em;line-height:1;opacity:0.2;position:absolute;right:20px;top:10px;}
+.subject-list{display:flex;flex-direction:column;gap:10px;position:relative;z-index:1;}
+.subject-item{
+  background:rgba(0,0,0,0.22);border:1px solid rgba(255,255,255,0.12);
+  border-radius:var(--r-md);padding:12px 14px;
+}
+.subject-item-name{font-weight:700;font-size:0.92rem;margin-bottom:4px;}
+.subject-item-meta{
+  display:flex;gap:8px;flex-wrap:wrap;
+}
+.meta-badge{
+  font-size:0.7rem;font-weight:600;
+  background:rgba(255,255,255,0.12);border-radius:50px;
+  padding:2px 8px;opacity:0.85;
+}
+
+/* ── PERIOD TABLE ── */
+.period-table-wrap{overflow-x:auto;margin-bottom:48px;}
+.period-table{
+  width:100%;border-collapse:collapse;
+  background:var(--c-surface);border-radius:var(--r-lg);overflow:hidden;
+  border:1px solid var(--c-border);font-size:0.85rem;
+}
+.period-table th{
+  padding:13px 16px;text-align:left;
+  background:rgba(168,85,247,0.1);border:1px solid var(--c-border);
+  font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;
+  color:var(--c-purple);white-space:nowrap;
+}
+.period-table td{
+  padding:12px 16px;border:1px solid var(--c-border);
+  vertical-align:top;font-size:0.83rem;
+}
+.period-table tr:nth-child(even) td{background:rgba(255,255,255,0.02);}
+.period-table tr:hover td{background:rgba(255,255,255,0.04);}
+.td-slot{font-weight:800;white-space:nowrap;}
+.td-chip{
+  display:inline-block;padding:3px 9px;border-radius:50px;
+  font-size:0.72rem;font-weight:600;margin:2px;
+  background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);
+}
+
+/* ── ALGO STEPS ── */
+.algo-timeline{display:flex;flex-direction:column;gap:0;margin-top:16px;}
+.algo-step{
+  display:flex;gap:0;
+  animation:fadeUp 0.3s ease both;
+}
+.algo-step-left{display:flex;flex-direction:column;align-items:center;margin-right:16px;}
+.algo-step-dot{
+  width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.82rem;font-weight:800;flex-shrink:0;
+  background:linear-gradient(135deg,var(--c-purple),var(--c-indigo));
+  color:#fff;box-shadow:0 4px 14px rgba(168,85,247,0.4);
+}
+.algo-step-line{flex:1;width:2px;background:linear-gradient(180deg,rgba(168,85,247,0.3),transparent);margin:4px 0;}
+.algo-step-right{
+  flex:1;padding:0 0 20px;
+}
+.algo-step-right h4{font-size:0.9rem;font-weight:700;margin-bottom:4px;}
+.algo-step-right p{font-size:0.83rem;color:var(--c-muted);line-height:1.55;}
+.algo-step-slot{
+  display:inline-block;padding:3px 12px;border-radius:50px;
+  font-size:0.8rem;font-weight:700;margin-top:6px;
+  background:rgba(168,85,247,0.15);border:1px solid rgba(168,85,247,0.35);
+  color:#d8aaff;
+}
+
+/* NO DATA */
+.no-data{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 40px;text-align:center;gap:16px;}
+.no-data-icon{font-size:4rem;opacity:0.3;}
+
+/* PRINT */
+@media print{
+  #bg3d,.bg-overlay,.nav,footer,.no-print{display:none!important;}
+  .page-wrap{background:#fff;color:#000;}
+  .tt-slot{break-inside:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+}
+</style>
+</head>
+<body>
+<canvas id="bg3d"></canvas>
+<div class="bg-overlay"></div>
+
+<div class="page-wrap">
+  <nav class="nav">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-dot">GC</div><span>GraphScheduler</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="setup.html" class="nav-link">Setup</a>
+      <a href="graph.html" class="nav-link">Graph</a>
+      <a href="timetable.html" class="nav-link active">Timetable</a>
+      <a href="faculty.html"   class="nav-link">Faculty</a>
+      <a href="division.html" class="nav-link">Division</a>
+    </div>
+  </nav>
+
+  <div class="container" style="padding-bottom:80px;">
+
+    <div style="padding:32px 0 0;">
+      <div class="section-label" style="margin-bottom:12px;">📅 Results</div>
+      <h1 class="section-title anim-up">Generated <span class="grad-full">Timetable</span></h1>
+      <p class="section-sub anim-up delay-1">Conflict-free schedule produced by the Greedy Graph Coloring Algorithm.</p>
+    </div>
+
+    <!-- NO DATA -->
+    <div id="noDataView" class="glass" style="display:none;margin-bottom:40px;">
+      <div class="no-data">
+        <div class="no-data-icon">📅</div>
+        <h3>No timetable generated yet</h3>
+        <p>Go to Setup, add your data, then click "Generate Timetable".</p>
+        <a href="setup.html" class="btn btn-primary">⚙️ Go to Setup</a>
+      </div>
+    </div>
+
+    <!-- MAIN -->
+    <div id="mainView" style="display:none;">
+
+      <!-- STATS -->
+      <div class="stats-banner anim-up delay-1">
+        <div class="stat-card">
+          <div class="stat-card-num grad-purple" id="st-subjects">0</div>
+          <div class="stat-card-label">Subjects Scheduled</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-num grad-cyan" id="st-conflicts">0</div>
+          <div class="stat-card-label">Conflicts Resolved</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-num" style="color:var(--c-green)" id="st-slots">0</div>
+          <div class="stat-card-label">Time Slots Used</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-num" style="color:var(--c-amber)" id="st-teachers">0</div>
+          <div class="stat-card-label">Teachers</div>
+        </div>
+      </div>
+
+      <!-- ACTION BAR -->
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:32px;" class="no-print">
+        <a href="graph.html"   class="btn btn-ghost">🔗 View Graph</a>
+        <a href="faculty.html" class="btn btn-ghost">👨‍🏫 Faculty View</a>
+        <a href="setup.html"   class="btn btn-ghost">⚙️ Edit Setup</a>
+        <button class="btn btn-cyan"    onclick="regenerate()">🔄 Regenerate</button>
+        <button class="btn btn-primary" onclick="window.print()">🖨️ Print Timetable</button>
+      </div>
+
+      <!-- SLOT CARDS -->
+      <div class="section-label" style="margin-bottom:16px;">🎨 Time Slot Cards</div>
+      <div class="tt-grid" id="ttGrid"></div>
+
+      <!-- TABLE VIEW -->
+      <div class="section-label" style="margin-bottom:16px;">📋 Table View</div>
+      <div class="glass" style="padding:24px;margin-bottom:48px;">
+        <div class="period-table-wrap">
+          <table class="period-table" id="ttTable">
+            <thead>
+              <tr>
+                <th>Time Slot</th>
+                <th>Subject</th>
+                <th>Teacher(s)</th>
+                <th>Division(s)</th>
+                <th>Conflicts With</th>
+              </tr>
+            </thead>
+            <tbody id="ttTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ALGORITHM WALKTHROUGH -->
+      <div class="section-label" style="margin-bottom:16px;">🧠 Algorithm Walkthrough</div>
+      <div class="glass" style="padding:28px;margin-bottom:48px;">
+        <p style="font-size:0.88rem;color:var(--c-muted);margin-bottom:24px;">
+          Step-by-step trace of the Greedy Graph Coloring algorithm assigning each subject to a time slot.
+        </p>
+        <div class="algo-timeline" id="algoTimeline"></div>
+      </div>
+
+      <!-- THEORY FOOTER -->
+      <div class="glass" style="padding:28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:24px;margin-bottom:20px;">
+        <div>
+          <div style="font-size:0.8rem;font-weight:700;color:var(--c-purple);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">📐 Algorithm</div>
+          <p style="font-size:0.85rem;color:var(--c-muted);line-height:1.65;">
+            <strong style="color:var(--c-text)">Greedy Graph Coloring</strong> — processes each vertex and assigns the smallest color not used by any of its neighbors.
+          </p>
+        </div>
+        <div>
+          <div style="font-size:0.8rem;font-weight:700;color:var(--c-cyan);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">⏱️ Complexity</div>
+          <p style="font-size:0.85rem;color:var(--c-muted);line-height:1.65;">
+            Time: <strong style="color:var(--c-text)">O(V² + E)</strong><br/>
+            Space: <strong style="color:var(--c-text)">O(V + E)</strong><br/>
+            V = subjects, E = conflicts
+          </p>
+        </div>
+        <div>
+          <div style="font-size:0.8rem;font-weight:700;color:var(--c-green);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">✅ Guarantee</div>
+          <p style="font-size:0.85rem;color:var(--c-muted);line-height:1.65;">
+            No two conflicting subjects share a time slot. <strong style="color:var(--c-text)">Zero scheduling conflicts</strong> guaranteed.
+          </p>
+        </div>
+        <div>
+          <div style="font-size:0.8rem;font-weight:700;color:var(--c-amber);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">🎓 VTU Context</div>
+          <p style="font-size:0.85rem;color:var(--c-muted);line-height:1.65;">
+            This demonstrates how Graph Theory (CS subject, VTU 3rd/4th sem) solves a <strong style="color:var(--c-text)">real administrative problem</strong>.
+          </p>
+        </div>
+      </div>
+
+    </div><!-- /mainView -->
+  </div><!-- /container -->
+
+  <footer class="footer">
+    <div class="footer-brand">🎓 VTU Graph Theory Mini Project</div>
+    <div class="footer-links"><a href="index.html">Home</a><a href="setup.html">Setup</a><a href="graph.html">Graph</a><a href="timetable.html">Timetable</a><a href="faculty.html">Faculty</a><a href="division.html">Division</a></div>
+    <div>Graph Coloring • Greedy Algorithm • Vanilla JS</div>
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="js/bg3d.js"></script>
+<script src="js/state.js"></script>
+<script>
+const SLOT_BG = [
+  'linear-gradient(135deg,#7c3aed,#a855f7)',
+  'linear-gradient(135deg,#0284c7,#06b6d4)',
+  'linear-gradient(135deg,#059669,#10b981)',
+  'linear-gradient(135deg,#d97706,#f59e0b)',
+  'linear-gradient(135deg,#e11d48,#f43f5e)',
+  'linear-gradient(135deg,#0d9488,#14b8a6)',
+  'linear-gradient(135deg,#6d28d9,#8b5cf6)',
+  'linear-gradient(135deg,#be185d,#ec4899)',
+  'linear-gradient(135deg,#1e40af,#3b82f6)',
+  'linear-gradient(135deg,#166534,#22c55e)',
+];
+
+function toast(msg, type='success') {
+  const el = document.getElementById('toast');
+  el.textContent=msg; el.className=`toast show ${type}`;
+  clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),3200);
+}
+
+function init() {
+  const state     = APP.loadState();
+  const hasData   = state.subjects.length > 0 && Object.keys(state.coloring).length > 0;
+  document.getElementById('noDataView').style.display = hasData ? 'none' : 'block';
+  document.getElementById('mainView').style.display   = hasData ? 'block' : 'none';
+  if (!hasData) return;
+
+  const conflicts = APP.detectConflicts(state);
+  const slots     = APP.buildTimetable(state);
+  const slotCount = Object.keys(slots).length;
+
+  document.getElementById('st-subjects').textContent  = state.subjects.length;
+  document.getElementById('st-conflicts').textContent = conflicts.length;
+  document.getElementById('st-slots').textContent     = slotCount;
+  document.getElementById('st-teachers').textContent  = state.teachers.length;
+
+  buildCards(state, slots, conflicts);
+  buildTable(state, slots, conflicts);
+  buildAlgo(state);
+}
+
+function buildCards(state, slots, conflicts) {
+  const grid = document.getElementById('ttGrid');
+  grid.innerHTML = '';
+  const sorted = Object.keys(slots).map(Number).sort((a,b)=>a-b);
+
+  sorted.forEach((ci, i) => {
+    const subs = slots[ci];
+    const card = document.createElement('div');
+    card.className = 'tt-slot';
+    card.style.background = SLOT_BG[ci % SLOT_BG.length];
+    card.style.animationDelay = `${i*0.07}s`;
+
+    const subItems = subs.map(id => {
+      const teachers = APP.subjectTeachers(state, id);
+      const divs     = APP.subjectDivisions(state, id);
+      return `<div class="subject-item">
+        <div class="subject-item-name">${APP.subjectName(state,id)}</div>
+        <div class="subject-item-meta">
+          ${teachers.map(t=>`<span class="meta-badge">👨‍🏫 ${t}</span>`).join('')}
+          ${divs.map(d=>`<span class="meta-badge">🏫 ${d}</span>`).join('')}
+        </div>
+      </div>`;
+    }).join('');
+
+    card.innerHTML = `
+      <div class="tt-slot-header">
+        <div>
+          <div class="tt-slot-label">Time Slot</div>
+        </div>
+        <div class="tt-slot-badge">${ci+1}</div>
+      </div>
+      <div class="tt-slot-num">${ci+1}</div>
+      <div class="subject-list">${subItems}</div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function buildTable(state, slots, conflicts) {
+  const tbody = document.getElementById('ttTableBody');
+  tbody.innerHTML = '';
+  const sorted = Object.keys(slots).map(Number).sort((a,b)=>a-b);
+
+  sorted.forEach(ci => {
+    slots[ci].forEach(id => {
+      const teachers = APP.subjectTeachers(state, id);
+      const divs     = APP.subjectDivisions(state, id);
+      const neighbors = conflicts
+        .filter(([a,b])=>a===id||b===id)
+        .map(([a,b])=>APP.subjectName(state,a===id?b:a));
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><span class="td-slot" style="color:${SLOT_BG[ci%SLOT_BG.length].includes('a855f7')?'#d8aaff':'#7ee8f8'}">Slot ${ci+1}</span></td>
+        <td><strong>${APP.subjectName(state,id)}</strong></td>
+        <td>${teachers.map(t=>`<span class="td-chip">👨‍🏫 ${t}</span>`).join(' ') || '<span style="color:var(--c-muted)">—</span>'}</td>
+        <td>${divs.map(d=>`<span class="td-chip">🏫 ${d}</span>`).join(' ') || '<span style="color:var(--c-muted)">—</span>'}</td>
+        <td>${neighbors.map(n=>`<span class="td-chip" style="border-color:rgba(244,63,94,0.3)">⚡ ${n}</span>`).join(' ') || '<span style="color:var(--c-green)">None ✓</span>'}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  });
+}
+
+function buildAlgo(state) {
+  const steps = state.algoSteps || [];
+  const container = document.getElementById('algoTimeline');
+  container.innerHTML = '';
+
+  if (!steps.length) {
+    container.innerHTML = '<div style="color:var(--c-muted);font-size:0.88rem;">No algorithm steps recorded. Regenerate the timetable.</div>';
+    return;
+  }
+
+  steps.forEach((s, i) => {
+    const isLast = i === steps.length - 1;
+    const el = document.createElement('div');
+    el.className = 'algo-step';
+    el.style.animationDelay = `${i*0.05}s`;
+    el.innerHTML = `
+      <div class="algo-step-left">
+        <div class="algo-step-dot">${s.num}</div>
+        ${!isLast ? '<div class="algo-step-line"></div>' : ''}
+      </div>
+      <div class="algo-step-right">
+        <h4>${s.name}</h4>
+        <p>${s.reason}</p>
+        <span class="algo-step-slot">→ Assigned to Slot ${s.slot+1}</span>
+      </div>
+    `;
+    container.appendChild(el);
+  });
+}
+
+function regenerate() {
+  const state = APP.loadState();
+  if (state.subjects.length === 0) { toast('No subjects found. Go to Setup.','error'); return; }
+  const { coloring, steps } = APP.runGraphColoring(state);
+  state.coloring = coloring; state.algoSteps = steps;
+  APP.saveState(state);
+  toast('✅ Timetable regenerated!');
+  init();
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
