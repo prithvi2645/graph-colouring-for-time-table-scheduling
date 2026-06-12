@@ -223,13 +223,14 @@
       <a href="timetable.html" class="nav-link">Timetable</a>
       <a href="faculty.html"   class="nav-link">Faculty</a>
       <a href="division.html"  class="nav-link active">Division</a>
+      <button class="theme-btn" id="theme-toggle"><span></span><span>Dark</span></button>
     </div>
   </nav>
 
   <div class="container" style="padding-bottom: 80px;">
 
     <div style="padding: 32px 0 24px;">
-      <div class="section-label" style="margin-bottom: 12px;">🏫 Division Weekly Timetable</div>
+      <div class="section-label" style="margin-bottom: 12px;">Division Weekly Timetable</div>
       <h1 class="section-title anim-up">Complete <span class="grad-cyan">Division Schedule</span></h1>
       <p class="section-sub anim-up delay-1">
         Select a class division to see its entire week —
@@ -240,12 +241,12 @@
     <!-- NO DATA STATE -->
     <div id="noDataView" class="glass" style="display:none; margin-bottom:40px;">
       <div class="no-data">
-        <div class="no-data-icon">🏫</div>
+        <div class="no-data-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
         <h3>No timetable generated yet</h3>
         <p>Go to Setup, add subjects with teachers &amp; divisions, then generate the timetable.</p>
         <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:8px;">
-          <a href="setup.html"     class="btn btn-primary">⚙️ Go to Setup</a>
-          <a href="timetable.html" class="btn btn-ghost">📅 View Timetable</a>
+          <a href="setup.html"     class="btn btn-primary">Go to Setup</a>
+          <a href="timetable.html" class="btn btn-ghost">View Timetable</a>
         </div>
       </div>
     </div>
@@ -268,9 +269,9 @@
             <div class="div-banner-subs" id="dv-subs"></div>
           </div>
           <div class="div-banner-right no-print">
-            <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨️ Print</button>
-            <a href="faculty.html" class="btn btn-ghost btn-sm">👨‍🏫 Faculty View</a>
-            <a href="timetable.html" class="btn btn-primary btn-sm">📅 Full Timetable</a>
+            <button class="btn btn-ghost btn-sm" onclick="window.print()">Print</button>
+            <a href="faculty.html" class="btn btn-ghost btn-sm">Faculty View</a>
+            <a href="timetable.html" class="btn btn-primary btn-sm">Full Timetable</a>
           </div>
         </div>
 
@@ -278,13 +279,13 @@
         <div class="stat-band anim-up delay-1" id="dv-stats"></div>
 
         <!-- WEEKLY TABLE -->
-        <div class="section-label" style="margin-bottom: 10px;">📅 Complete Weekly Schedule</div>
+        <div class="section-label" style="margin-bottom: 10px;">Complete Weekly Schedule</div>
         <div class="glass" style="padding: 16px; margin-bottom: 32px;">
           <div style="display:flex; gap:14px; flex-wrap:wrap; margin-bottom:14px;
                       font-size:0.75rem; color:var(--c-muted); align-items:center;">
-            <span>📆 <strong style="color:var(--c-text)">6 days</strong> Mon – Sat</span>
-            <span>⏰ <strong style="color:var(--c-text)">6 periods</strong>/day (10 AM – 5 PM)</span>
-            <span>☕ <strong style="color:var(--c-text)">2 breaks</strong> included</span>
+            <span><strong style="color:var(--c-text)">6 days</strong> Mon – Sat</span>
+            <span><strong style="color:var(--c-text)">6 periods</strong>/day (10 AM – 5 PM)</span>
+            <span><strong style="color:var(--c-text)">2 breaks</strong> included</span>
             <span style="margin-left:auto;font-style:italic;">Hover a cell for details</span>
           </div>
           <div class="schedule-wrap">
@@ -296,7 +297,7 @@
         </div>
 
         <!-- SUBJECT DETAILS TABLE -->
-        <div class="section-label" style="margin-bottom: 12px;">📚 Subject-wise Breakdown</div>
+        <div class="section-label" style="margin-bottom: 12px;">Subject-wise Breakdown</div>
         <div class="glass" style="padding: 20px 24px; margin-bottom: 32px;">
           <div style="overflow-x:auto;">
             <table class="subj-list-table">
@@ -318,7 +319,7 @@
         </div>
 
         <!-- TEACHER SUMMARY -->
-        <div class="section-label" style="margin-bottom: 12px;">👨‍🏫 Faculty Assigned to This Division</div>
+        <div class="section-label" style="margin-bottom: 12px;">Faculty Assigned to This Division</div>
         <div class="glass" style="padding: 20px 24px; margin-bottom: 32px;">
           <div id="teacherSummary" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px;"></div>
         </div>
@@ -328,7 +329,7 @@
   </div>
 
   <footer class="footer">
-    <div class="footer-brand">🎓 VTU Graph Theory Mini Project</div>
+    <div class="footer-brand">VTU Graph Theory Mini Project</div>
     <div class="footer-links">
       <a href="index.html">Home</a>
       <a href="setup.html">Setup</a>
@@ -342,6 +343,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
+<script src="js/theme.js"></script>
 <script src="js/bg3d.js"></script>
 <script src="js/state.js"></script>
 <script>
@@ -375,8 +377,8 @@ let state = null;
 /* ═══════════════════════════════════
    INIT
 ═══════════════════════════════════ */
-function init() {
-  state = APP.loadState();
+async function init() {
+  state = await APP.loadState();
   const hasData = state.subjects.length > 0 && Object.keys(state.coloring).length > 0;
   document.getElementById('noDataView').style.display = hasData ? 'none' : 'block';
   document.getElementById('mainView').style.display   = hasData ? 'block' : 'none';
@@ -459,7 +461,7 @@ function renderBanner(div, myPeriods) {
   document.getElementById('dv-name').textContent = div.name + ' — Weekly Timetable';
   const teachers = [...new Set(myPeriods.flatMap(p => p.teachers))];
   document.getElementById('dv-subs').textContent =
-    `📚 ${(div.subjects||[]).length} subjects  ·  👨‍🏫 ${teachers.length} teacher${teachers.length!==1?'s':''}`;
+    `${(div.subjects||[]).length} subjects  ·  ${teachers.length} teacher${teachers.length!==1?'s':''}`;
 }
 
 /* ═══════════════════════════════════
@@ -501,9 +503,9 @@ function renderWeekTable(myPeriods) {
 
   /* HEAD */
   document.getElementById('weekHead').innerHTML = `<tr>
-    <th class="th-time">⏰ Time / Day</th>
+    <th class="th-time">Time / Day</th>
     ${APP.DAYS.map(d =>
-      `<th class="th-day${d===today?' is-today':''}">${DAY_SHORT[d]||d}${d===today?' 📍':''}</th>`
+      `<th class="th-day${d===today?' is-today':''}">${DAY_SHORT[d]||d}${d===today?' \u25cf':''}</th>`
     ).join('')}
   </tr>`;
 
@@ -605,8 +607,8 @@ function renderSubjectList(div, schedule) {
       <td style="padding:12px 14px;color:var(--c-muted);font-size:0.82rem;">${sch ? sch.timeLabel : '—'}</td>
       <td style="padding:12px 14px;">
         ${hasConf
-          ? '<span style="color:var(--c-amber);font-size:0.78rem;font-weight:700;">⚠️ Detected</span>'
-          : '<span style="color:var(--c-green);font-size:0.78rem;font-weight:700;">✅ Clear</span>'}
+          ? '<span style="color:var(--c-amber);font-size:0.78rem;font-weight:700;">Conflict</span>'
+          : '<span style="color:var(--c-green);font-size:0.78rem;font-weight:700;">Clear</span>'}
       </td>
     </tr>`;
   }).join('');

@@ -97,12 +97,13 @@
       <a href="timetable.html" class="nav-link">Timetable</a>
       <a href="faculty.html"   class="nav-link">Faculty</a>
       <a href="division.html" class="nav-link">Division</a>
+      <button class="theme-btn" id="theme-toggle"><span></span><span>Dark</span></button>
     </div>
   </nav>
 
   <div class="container">
     <div style="padding:32px 0 0;">
-      <div class="section-label" style="margin-bottom:12px;">⚙️ Setup Wizard</div>
+      <div class="section-label" style="margin-bottom:12px;">Setup Wizard</div>
       <h1 class="section-title anim-up">Build your <span class="grad-purple">schedule data</span></h1>
       <p class="section-sub anim-up delay-1">Add subjects → assign teachers → define class divisions. Conflicts are detected automatically.</p>
 
@@ -110,15 +111,15 @@
       <div class="step-bar anim-up delay-2">
         <div class="step-item active" id="bar-0" onclick="goStep(0)">
           <div class="step-num">1</div>
-          <span class="label">📚 Subjects</span>
+          <span class="label">Subjects</span>
         </div>
         <div class="step-item" id="bar-1" onclick="goStep(1)">
           <div class="step-num">2</div>
-          <span class="label">👨‍🏫 Teachers</span>
+          <span class="label">Teachers</span>
         </div>
         <div class="step-item" id="bar-2" onclick="goStep(2)">
           <div class="step-num">3</div>
-          <span class="label">🏫 Divisions</span>
+          <span class="label">Divisions</span>
         </div>
       </div>
     </div>
@@ -129,12 +130,12 @@
 
         <!-- STEP 1: SUBJECTS -->
         <div class="step-panel active glass panel-card" id="panel-0">
-          <div class="panel-title">📚 Step 1 — Subjects</div>
+          <div class="panel-title">Step 1 — Subjects</div>
           <p class="panel-sub">Add all subjects that need to be scheduled. Each subject becomes a node in the graph.</p>
 
           <div style="margin-bottom:16px;">
             <div class="form-label">Quick load sample data</div>
-            <span class="sample-chip" onclick="loadSample()">🎲 Load University Sample</span>
+            <span class="sample-chip" onclick="loadSample()">Load University Sample</span>
           </div>
 
           <div class="form-group">
@@ -146,7 +147,7 @@
           </div>
 
           <div id="subjectList" class="item-list">
-            <div class="empty-state"><div class="empty-icon">📚</div><div class="empty-text">No subjects yet. Add your first subject above.</div></div>
+            <div class="empty-state"><div class="empty-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><div class="empty-text">No subjects yet. Add your first subject above.</div></div>
           </div>
 
           <div class="nav-btns">
@@ -157,7 +158,7 @@
 
         <!-- STEP 2: TEACHERS -->
         <div class="step-panel glass panel-card" id="panel-1">
-          <div class="panel-title">👨‍🏫 Step 2 — Teachers</div>
+          <div class="panel-title">Step 2 — Teachers</div>
           <p class="panel-sub">Add teachers and select which subjects each teacher handles. If a teacher handles two subjects, those subjects conflict (cannot be in the same slot).</p>
 
           <div class="form-group">
@@ -169,7 +170,7 @@
           </div>
 
           <div id="teacherList" class="item-list">
-            <div class="empty-state"><div class="empty-icon">👨‍🏫</div><div class="empty-text">No teachers yet. Add a teacher above, then assign subjects.</div></div>
+            <div class="empty-state"><div class="empty-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="empty-text">No teachers yet. Add a teacher above, then assign subjects.</div></div>
           </div>
 
           <div class="nav-btns">
@@ -180,7 +181,7 @@
 
         <!-- STEP 3: DIVISIONS -->
         <div class="step-panel glass panel-card" id="panel-2">
-          <div class="panel-title">🏫 Step 3 — Class Divisions</div>
+          <div class="panel-title">Step 3 — Class Divisions</div>
           <p class="panel-sub">Add class divisions (e.g. CS-A, CS-B, EC-A) and select which subjects each division attends. Two subjects attended by the same division cannot be in the same slot.</p>
 
           <div class="form-group">
@@ -192,12 +193,12 @@
           </div>
 
           <div id="divisionList" class="item-list">
-            <div class="empty-state"><div class="empty-icon">🏫</div><div class="empty-text">No divisions yet. Add a division above, then assign subjects.</div></div>
+            <div class="empty-state"><div class="empty-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="empty-text">No divisions yet. Add a division above, then assign subjects.</div></div>
           </div>
 
           <div class="nav-btns">
             <button class="btn btn-ghost" onclick="goStep(1)">← Back</button>
-            <button class="btn btn-primary btn-lg" onclick="generate()">🚀 Generate Timetable →</button>
+            <button class="btn btn-primary btn-lg" onclick="generate()">Generate Timetable →</button>
           </div>
         </div>
 
@@ -208,19 +209,19 @@
 
         <!-- SUMMARY -->
         <div class="glass sidebar-card">
-          <div style="font-size:0.75rem;font-weight:700;letter-spacing:0.1em;color:var(--c-muted);text-transform:uppercase;margin-bottom:14px;">📊 Summary</div>
+          <div style="font-size:0.75rem;font-weight:700;letter-spacing:0.1em;color:var(--c-muted);text-transform:uppercase;margin-bottom:14px;">Summary</div>
           <div class="summary-stat"><span class="summary-stat-label">Subjects</span><span class="summary-stat-val" id="sum-subjects">0</span></div>
           <div class="summary-stat"><span class="summary-stat-label">Teachers</span><span class="summary-stat-val" id="sum-teachers">0</span></div>
           <div class="summary-stat"><span class="summary-stat-label">Divisions</span><span class="summary-stat-val" id="sum-divisions">0</span></div>
           <div class="summary-stat"><span class="summary-stat-label">Auto-detected Conflicts</span><span class="summary-stat-val" id="sum-conflicts" style="color:var(--c-red);">0</span></div>
           <div style="margin-top:16px;">
-            <button class="btn btn-red btn-sm" style="width:100%" onclick="clearAll()">🔄 Clear All Data</button>
+            <button class="btn btn-red btn-sm" style="width:100%" onclick="clearAll()">Clear All Data</button>
           </div>
         </div>
 
         <!-- CONFLICT PREVIEW -->
         <div class="glass sidebar-card">
-          <div style="font-size:0.75rem;font-weight:700;letter-spacing:0.1em;color:var(--c-muted);text-transform:uppercase;margin-bottom:14px;">⚡ Detected Conflicts</div>
+          <div style="font-size:0.75rem;font-weight:700;letter-spacing:0.1em;color:var(--c-muted);text-transform:uppercase;margin-bottom:14px;">Detected Conflicts</div>
           <div class="conflict-list" id="conflictPreview">
             <div style="font-size:0.82rem;color:var(--c-muted);font-style:italic;">Conflicts appear here as you assign teachers and divisions.</div>
           </div>
@@ -228,11 +229,11 @@
 
         <!-- HOW CONFLICTS WORK -->
         <div class="glass sidebar-card" style="font-size:0.82rem;color:var(--c-muted);line-height:1.65;">
-          <div style="font-size:0.75rem;font-weight:700;letter-spacing:0.1em;color:var(--c-muted);text-transform:uppercase;margin-bottom:12px;">💡 How conflicts work</div>
+          <div style="font-size:0.75rem;font-weight:700;letter-spacing:0.1em;color:var(--c-muted);text-transform:uppercase;margin-bottom:12px;">How conflicts work</div>
           <p style="margin-bottom:8px;">A conflict is created automatically when:</p>
-          <p style="color:var(--c-amber);margin-bottom:4px;">👨‍🏫 Teacher conflict</p>
+          <p style="color:var(--c-amber);margin-bottom:4px;">Teacher conflict</p>
           <p style="margin-bottom:10px;">Same teacher → two subjects → they clash.</p>
-          <p style="color:var(--c-cyan);margin-bottom:4px;">🏫 Division conflict</p>
+          <p style="color:var(--c-cyan);margin-bottom:4px;">Division conflict</p>
           <p>Same class division attends two subjects → they clash.</p>
         </div>
 
@@ -241,18 +242,26 @@
   </div>
 
   <footer class="footer">
-    <div class="footer-brand">🎓 VTU Graph Theory Mini Project</div>
+    <div class="footer-brand">VTU Graph Theory Mini Project</div>
     <div class="footer-links"><a href="index.html">Home</a><a href="setup.html">Setup</a><a href="graph.html">Graph</a><a href="timetable.html">Timetable</a><a href="faculty.html">Faculty</a><a href="division.html">Division</a></div>
     <div>Graph Coloring • Greedy Algorithm • Vanilla JS</div>
   </footer>
 </div>
 
 <div class="toast" id="toast"></div>
+<script src="js/theme.js"></script>
 <script src="js/bg3d.js"></script>
 <script src="js/state.js"></script>
 <script>
 /* ── state ── */
-let state = APP.loadState();
+let state = {
+  subjects:  [],
+  teachers:  [],
+  divisions: [],
+  coloring:  {},
+  algoSteps: [],
+  schedule:  {},
+};
 
 /* ── NAVIGATION ── */
 let currentStep = 0;
@@ -275,8 +284,8 @@ function toast(msg, type='success') {
 }
 
 /* ── REFRESH ALL UI ── */
-function refresh() {
-  APP.saveState(state);
+async function refresh() {
+  await APP.saveState(state);
   renderSubjects();
   renderTeachers();
   renderDivisions();
@@ -301,7 +310,7 @@ function refreshSidebar() {
 }
 
 /* ── SUBJECTS ── */
-function addSubject() {
+async function addSubject() {
   const inp = document.getElementById('subjectInput');
   const name = inp.value.trim();
   if (!name) { toast('Enter a subject name.','error'); return; }
@@ -310,30 +319,30 @@ function addSubject() {
   }
   state.subjects.push({ id: APP.uid(), name });
   inp.value = '';
-  refresh();
+  await refresh();
   toast(`"${name}" added!`);
 }
 
-function removeSubject(id) {
+async function removeSubject(id) {
   const s = state.subjects.find(s=>s.id===id);
   state.subjects  = state.subjects.filter(s=>s.id!==id);
   state.teachers  = state.teachers.map(t=>({...t,subjects:(t.subjects||[]).filter(x=>x!==id)}));
   state.divisions = state.divisions.map(d=>({...d,subjects:(d.subjects||[]).filter(x=>x!==id)}));
   delete state.coloring[id];
-  refresh();
+  await refresh();
   if(s) toast(`"${s.name}" removed.`,'info');
 }
 
 function renderSubjects() {
   const el = document.getElementById('subjectList');
   if (state.subjects.length === 0) {
-    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📚</div><div class="empty-text">No subjects yet.</div></div>';
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><div class="empty-text">No subjects yet.</div></div>';
     return;
   }
   el.innerHTML = state.subjects.map((s,i) => `
     <div class="item-card">
       <div>
-        <div class="item-card-name">📖 ${s.name}</div>
+        <div class="item-card-name">${s.name}</div>
         <div class="item-card-meta">ID: ${s.id}</div>
       </div>
       <div class="item-card-right">
@@ -345,7 +354,7 @@ function renderSubjects() {
 }
 
 /* ── TEACHERS ── */
-function addTeacher() {
+async function addTeacher() {
   const inp = document.getElementById('teacherInput');
   const name = inp.value.trim();
   if (!name) { toast('Enter a teacher name.','error'); return; }
@@ -354,31 +363,31 @@ function addTeacher() {
   }
   state.teachers.push({ id: APP.uid(), name, subjects: [] });
   inp.value = '';
-  refresh();
+  await refresh();
   toast(`Teacher "${name}" added!`);
 }
 
-function removeTeacher(id) {
+async function removeTeacher(id) {
   const t = state.teachers.find(t=>t.id===id);
   state.teachers = state.teachers.filter(t=>t.id!==id);
-  refresh();
+  await refresh();
   if(t) toast(`"${t.name}" removed.`,'info');
 }
 
-function toggleTeacherSubject(teacherId, subjectId, el) {
+async function toggleTeacherSubject(teacherId, subjectId, el) {
   const teacher = state.teachers.find(t=>t.id===teacherId);
   if (!teacher) return;
   teacher.subjects = teacher.subjects || [];
   const idx = teacher.subjects.indexOf(subjectId);
   if (idx >= 0) { teacher.subjects.splice(idx,1); el.classList.remove('checked'); }
   else { teacher.subjects.push(subjectId); el.classList.add('checked'); }
-  refresh();
+  await refresh();
 }
 
 function renderTeachers() {
   const el = document.getElementById('teacherList');
   if (state.teachers.length === 0) {
-    el.innerHTML = '<div class="empty-state"><div class="empty-icon">👨‍🏫</div><div class="empty-text">No teachers yet.</div></div>';
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="empty-text">No teachers yet.</div></div>';
     return;
   }
   el.innerHTML = state.teachers.map(t => {
@@ -394,7 +403,7 @@ function renderTeachers() {
     return `<div class="item-card" style="flex-direction:column;gap:12px;">
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <div>
-          <div class="item-card-name">👨‍🏫 ${t.name}</div>
+          <div class="item-card-name">${t.name}</div>
           <div class="item-card-meta">Teaches: ${assigned}</div>
         </div>
         <button class="btn btn-red btn-sm" onclick="removeTeacher('${t.id}')">✕</button>
@@ -408,7 +417,7 @@ function renderTeachers() {
 }
 
 /* ── DIVISIONS ── */
-function addDivision() {
+async function addDivision() {
   const inp = document.getElementById('divisionInput');
   const name = inp.value.trim();
   if (!name) { toast('Enter a division name.','error'); return; }
@@ -417,31 +426,31 @@ function addDivision() {
   }
   state.divisions.push({ id: APP.uid(), name, subjects: [] });
   inp.value = '';
-  refresh();
+  await refresh();
   toast(`Division "${name}" added!`);
 }
 
-function removeDivision(id) {
+async function removeDivision(id) {
   const d = state.divisions.find(d=>d.id===id);
   state.divisions = state.divisions.filter(d=>d.id!==id);
-  refresh();
+  await refresh();
   if(d) toast(`"${d.name}" removed.`,'info');
 }
 
-function toggleDivisionSubject(divId, subjectId, el) {
+async function toggleDivisionSubject(divId, subjectId, el) {
   const div = state.divisions.find(d=>d.id===divId);
   if (!div) return;
   div.subjects = div.subjects || [];
   const idx = div.subjects.indexOf(subjectId);
   if (idx >= 0) { div.subjects.splice(idx,1); el.classList.remove('checked'); }
   else { div.subjects.push(subjectId); el.classList.add('checked'); }
-  refresh();
+  await refresh();
 }
 
 function renderDivisions() {
   const el = document.getElementById('divisionList');
   if (state.divisions.length === 0) {
-    el.innerHTML = '<div class="empty-state"><div class="empty-icon">🏫</div><div class="empty-text">No divisions yet.</div></div>';
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="empty-text">No divisions yet.</div></div>';
     return;
   }
   el.innerHTML = state.divisions.map(d => {
@@ -457,7 +466,7 @@ function renderDivisions() {
     return `<div class="item-card" style="flex-direction:column;gap:12px;">
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <div>
-          <div class="item-card-name">🏫 ${d.name}</div>
+          <div class="item-card-name">${d.name}</div>
           <div class="item-card-meta">Subjects: ${assigned}</div>
         </div>
         <button class="btn btn-red btn-sm" onclick="removeDivision('${d.id}')">✕</button>
@@ -471,29 +480,29 @@ function renderDivisions() {
 }
 
 /* ── GENERATE ── */
-function generate() {
+async function generate() {
   if (state.subjects.length === 0) { toast('Add at least one subject first.','error'); return; }
-  const { coloring, steps } = APP.runGraphColoring(state);
+  const { coloring, steps } = await APP.runGraphColoring(state);
   state.coloring  = coloring;
   state.algoSteps = steps;
-  APP.saveState(state);
-  toast('✅ Timetable generated! Redirecting…');
+  await APP.saveState(state);
+  toast('Timetable generated! Redirecting…');
   setTimeout(() => { window.location.href = 'timetable.html'; }, 900);
 }
 
 /* ── CLEAR ALL ── */
-function clearAll() {
+async function clearAll() {
   if (!confirm('Clear all subjects, teachers, and divisions?')) return;
-  APP.clearState();
-  state = APP.loadState();
-  refresh();
+  await APP.clearState();
+  state = await APP.loadState();
+  await refresh();
   toast('All data cleared.','info');
 }
 
 /* ── SAMPLE DATA ── */
-function loadSample() {
-  APP.clearState();
-  state = APP.loadState();
+async function loadSample() {
+  await APP.clearState();
+  state = await APP.loadState();
 
   const subjects = ['Mathematics','Physics','Chemistry','Data Structures','DBMS','English','Computer Networks','OS'];
   subjects.forEach(name => state.subjects.push({ id: APP.uid(), name }));
@@ -514,23 +523,46 @@ function loadSample() {
     { id:APP.uid(), name:'EC-A', subjects:[getId('Mathematics'),getId('Physics'),getId('English')] },
   ];
 
-  refresh();
-  toast('✅ Sample data loaded! Check the conflict preview on the right.','success');
+  // Try to sync sample with backend
+  try {
+    const res = await fetch('/api/sample', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        subjects: state.subjects,
+        teachers: state.teachers,
+        divisions: state.divisions
+      })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success) {
+        state = await APP.loadState();
+      }
+    }
+  } catch (err) {
+    console.warn("Backend loadSample failed, fell back to local storage:", err);
+  }
+
+  await refresh();
+  toast('Sample data loaded! Check the conflict preview on the right.','success');
 }
 
 /* ── KEYBOARD ── */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  state = await APP.loadState();
+  
   ['subjectInput','teacherInput','divisionInput'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.addEventListener('keydown', e => {
+    if (el) el.addEventListener('keydown', async e => {
       if (e.key === 'Enter') {
-        if (id==='subjectInput')  addSubject();
-        if (id==='teacherInput')  addTeacher();
-        if (id==='divisionInput') addDivision();
+        if (id==='subjectInput')  await addSubject();
+        if (id==='teacherInput')  await addTeacher();
+        if (id==='divisionInput') await addDivision();
       }
     });
   });
-  refresh();
+  await refresh();
 });
 </script>
 </body>

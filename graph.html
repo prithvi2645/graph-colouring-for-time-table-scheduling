@@ -100,12 +100,13 @@
       <a href="timetable.html" class="nav-link">Timetable</a>
       <a href="faculty.html"   class="nav-link">Faculty</a>
       <a href="division.html" class="nav-link">Division</a>
+      <button class="theme-btn" id="theme-toggle"><span></span><span>Dark</span></button>
     </div>
   </nav>
 
   <div class="container">
     <div style="padding:32px 0 0;">
-      <div class="section-label" style="margin-bottom:12px;">🔗 Conflict Graph</div>
+      <div class="section-label" style="margin-bottom:12px;">Conflict Graph</div>
       <h1 class="section-title anim-up">Visual <span class="grad-cyan">Graph View</span></h1>
       <p class="section-sub anim-up delay-1">Each node is a subject. Edges show conflicts. Colors show the assigned time slot.</p>
     </div>
@@ -113,10 +114,10 @@
     <!-- NO DATA STATE -->
     <div id="noDataView" class="glass" style="display:none;margin-bottom:40px;">
       <div class="no-data">
-        <div class="no-data-icon">🔗</div>
+        <div class="no-data-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><line x1="12" y1="7" x2="5.5" y2="17"/><line x1="12" y1="7" x2="18.5" y2="17"/><line x1="7" y1="19" x2="17" y2="19"/></svg></div>
         <h3>No timetable generated yet</h3>
         <p>Go to Setup, add your subjects, teachers & divisions, then generate the timetable.</p>
-        <a href="setup.html" class="btn btn-primary">⚙️ Go to Setup</a>
+        <a href="setup.html" class="btn btn-primary">Go to Setup</a>
       </div>
     </div>
 
@@ -133,8 +134,8 @@
         <div class="graph-wrap">
           <div class="graph-controls">
             <div class="info-pill">🖱️ Hover nodes for details</div>
-            <button class="btn btn-ghost btn-sm" onclick="redraw()">🔄 Redraw</button>
-            <button class="btn btn-primary btn-sm" onclick="window.location.href='timetable.html'">📅 View Timetable →</button>
+            <button class="btn btn-ghost btn-sm" onclick="redraw()">Redraw</button>
+            <button class="btn btn-primary btn-sm" onclick="window.location.href='timetable.html'">View Timetable →</button>
           </div>
           <div class="canvas-container glass">
             <canvas id="graphCanvas"></canvas>
@@ -152,15 +153,15 @@
         <!-- SIDEBAR -->
         <div class="graph-sidebar">
           <div class="glass side-card">
-            <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;color:var(--c-muted);text-transform:uppercase;margin-bottom:10px;">🎨 Slot Legend</div>
+            <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;color:var(--c-muted);text-transform:uppercase;margin-bottom:10px;">Slot Legend</div>
             <div class="legend-list" id="legendList"></div>
           </div>
           <div class="glass side-card">
-            <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;color:var(--c-muted);text-transform:uppercase;margin-bottom:10px;">⚡ All Conflicts (<span id="edge-count">0</span>)</div>
+            <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;color:var(--c-muted);text-transform:uppercase;margin-bottom:10px;">All Conflicts (<span id="edge-count">0</span>)</div>
             <div class="conflict-scroll" id="conflictScroll"></div>
           </div>
           <div class="glass side-card" style="font-size:0.82rem;line-height:1.7;color:var(--c-muted);">
-            <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;color:var(--c-muted);text-transform:uppercase;margin-bottom:10px;">📐 Algorithm</div>
+            <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;color:var(--c-muted);text-transform:uppercase;margin-bottom:10px;">Algorithm</div>
             <p><strong style="color:var(--c-text)">Greedy Graph Coloring</strong></p>
             <p>For each vertex: assign the smallest color not used by its neighbors.</p>
             <p style="margin-top:8px;">Complexity: <strong style="color:var(--c-cyan)">O(V² + E)</strong></p>
@@ -171,13 +172,14 @@
   </div>
 
   <footer class="footer">
-    <div class="footer-brand">🎓 VTU Graph Theory Mini Project</div>
+    <div class="footer-brand">VTU Graph Theory Mini Project</div>
     <div class="footer-links"><a href="index.html">Home</a><a href="setup.html">Setup</a><a href="graph.html">Graph</a><a href="timetable.html">Timetable</a><a href="faculty.html">Faculty</a><a href="division.html">Division</a></div>
     <div>Graph Coloring • Greedy Algorithm • Vanilla JS</div>
   </footer>
 </div>
 
 <div class="toast" id="toast"></div>
+<script src="js/theme.js"></script>
 <script src="js/bg3d.js"></script>
 <script src="js/state.js"></script>
 <script>
@@ -190,8 +192,8 @@ const PALETTE = [
 
 let state, conflicts, projNodes = [];
 
-function init() {
-  state     = APP.loadState();
+async function init() {
+  state     = await APP.loadState();
   conflicts = APP.detectConflicts(state);
 
   const hasData = state.subjects.length > 0 && Object.keys(state.coloring).length > 0;

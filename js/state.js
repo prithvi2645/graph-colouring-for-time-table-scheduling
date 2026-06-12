@@ -13,15 +13,65 @@ const DEFAULT_STATE = {
   schedule:  {},   // { slotIndex: { day, period, timeLabel } }
 };
 
-/* ── Persistence ── */
-function loadState() {
+/* ── Persistence (Async with localStorage fallback) ── */
+const API_BASE = ''; // Relative path, works when served from Flask or via proxy
+
+async function loadState() {
+  try {
+    const res = await fetch(`${API_BASE}/api/state`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && data.state) {
+        localStorage.setItem(APP_KEY, JSON.stringify(data.state));
+        return { ...DEFAULT_STATE, ...data.state };
+      }
+    }
+  } catch (err) {
+    console.warn("Backend loadState failed, using local storage:", err);
+  }
+  
   try {
     const raw = localStorage.getItem(APP_KEY);
     return raw ? { ...DEFAULT_STATE, ...JSON.parse(raw) } : { ...DEFAULT_STATE };
-  } catch { return { ...DEFAULT_STATE }; }
+  } catch {
+    return { ...DEFAULT_STATE };
+  }
 }
-function saveState(state) { localStorage.setItem(APP_KEY, JSON.stringify(state)); }
-function clearState()     { localStorage.removeItem(APP_KEY); }
+
+async function saveState(state) {
+  try {
+    localStorage.setItem(APP_KEY, JSON.stringify(state));
+  } catch (err) {
+    console.error("Local storage save failed:", err);
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/state`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(state)
+    });
+    return res.ok;
+  } catch (err) {
+    console.warn("Backend saveState failed, running in local storage fallback:", err);
+    return false;
+  }
+}
+
+async function clearState() {
+  try {
+    localStorage.removeItem(APP_KEY);
+  } catch {}
+  
+  try {
+    const res = await fetch(`${API_BASE}/api/clear`, { method: 'POST' });
+    return res.ok;
+  } catch (err) {
+    console.warn("Backend clearState failed:", err);
+    return false;
+  }
+}
+
 function uid()            { return Math.random().toString(36).slice(2, 9); }
 
 /* ════════════════════════════════════════════════════
@@ -46,7 +96,24 @@ function detectConflicts(state) {
 /* ════════════════════════════════════════════════════
    GREEDY GRAPH COLORING
 ════════════════════════════════════════════════════ */
-function runGraphColoring(state) {
+async function runGraphColoring(state) {
+  try {
+    // Make sure backend has the latest data
+    await saveState(state);
+    const res = await fetch(`${API_BASE}/api/generate`, { method: 'POST' });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success) {
+        return { coloring: data.coloring, steps: data.steps };
+      }
+    }
+  } catch (err) {
+    console.warn("Backend generate failed, falling back to local coloring:", err);
+  }
+  return runGraphColoringLocal(state);
+}
+
+function runGraphColoringLocal(state) {
   const subjects  = state.subjects;
   const conflicts = detectConflicts(state);
   const coloring  = {};
@@ -102,8 +169,8 @@ const PERIOD_TIMES = [
 
 /* Break rows shown visually in the weekly table */
 const BREAKS = [
-  { afterPeriod: 2, label:'☕ Break', time:'11:50 – 12:10 PM', duration:'20 min' },
-  { afterPeriod: 4, label:'🍽️ Lunch Break', time:'2:00 – 3:10 PM', duration:'70 min' },
+  { afterPeriod: 2, label:'Break', time:'11:50 – 12:10 PM', duration:'20 min' },
+  { afterPeriod: 4, label:'Lunch Break', time:'2:00 – 3:10 PM', duration:'70 min' },
 ];
 
 const PERIODS_PER_DAY = PERIOD_TIMES.length;  // 6

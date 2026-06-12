@@ -20,7 +20,7 @@
     SPEED_Y        : 0.0018,
     SPEED_X        : 0.0008,
     SPEED_Z        : 0.0004,
-    COLORS         : ['#a855f7','#818cf8','#06b6d4','#10b981','#c084fc','#38bdf8'],
+    COLORS         : ['#ff6b00', '#ffffff', '#ff8c38', '#cc4a00', '#ffaa5a', '#ff6b00'],
     GEO_SCALE      : 0,   // set after resize
     GEO_SPEED_Y    : 0.004,
     GEO_SPEED_X    : 0.002,
@@ -114,10 +114,10 @@
       return project(p[0]*sc, p[1]*sc, p[2]*sc - CFG.DEPTH*0.15);
     });
 
-    // Outer ring glow
+    // Outer ring glow — orange
     const grdRing = ctx.createRadialGradient(W/2,H/2,sc*0.3,W/2,H/2,sc*1.4);
-    grdRing.addColorStop(0,'rgba(168,85,247,0.04)');
-    grdRing.addColorStop(0.5,'rgba(6,182,212,0.06)');
+    grdRing.addColorStop(0,'rgba(255,107,0,0.06)');
+    grdRing.addColorStop(0.5,'rgba(255,140,56,0.04)');
     grdRing.addColorStop(1,'rgba(0,0,0,0)');
     ctx.fillStyle = grdRing;
     ctx.fillRect(0,0,W,H);
@@ -132,10 +132,10 @@
       ctx.moveTo(va.sx, va.sy);
       ctx.lineTo(vb.sx, vb.sy);
 
-      // Gradient edge: purple → cyan
+      // Gradient edge: orange → light-orange
       const grad = ctx.createLinearGradient(va.sx,va.sy,vb.sx,vb.sy);
-      grad.addColorStop(0, `rgba(168,85,247,${depthAlpha.toFixed(3)})`);
-      grad.addColorStop(1, `rgba(6,182,212,${depthAlpha.toFixed(3)})`);
+      grad.addColorStop(0, `rgba(255,107,0,${depthAlpha.toFixed(3)})`);
+      grad.addColorStop(1, `rgba(255,140,56,${depthAlpha.toFixed(3)})`);
       ctx.strokeStyle = grad;
       ctx.lineWidth = 1 + va.scale * 0.5;
       ctx.stroke();
@@ -148,10 +148,10 @@
       const r = 2.5 * v.scale;
 
       ctx.beginPath(); ctx.arc(v.sx, v.sy, r*2.5, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(168,85,247,${(alpha*0.35).toFixed(3)})`; ctx.fill();
+      ctx.fillStyle = `rgba(255,107,0,${(alpha*0.38).toFixed(3)})`; ctx.fill();
 
       ctx.beginPath(); ctx.arc(v.sx, v.sy, r, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(200,160,255,${alpha.toFixed(3)})`; ctx.fill();
+      ctx.fillStyle = `rgba(255,220,180,${alpha.toFixed(3)})`; ctx.fill();
     });
 
     /* ── Particle network ── */
@@ -216,8 +216,9 @@
 
     /* ── Depth fog overlay (bottom-edge vignette) ── */
     const fogGrd = ctx.createLinearGradient(0, H*0.7, 0, H);
-    fogGrd.addColorStop(0, 'rgba(6,6,18,0)');
-    fogGrd.addColorStop(1, 'rgba(6,6,18,0.55)');
+    const bgClr = document.documentElement.getAttribute('data-theme') === 'light' ? '255,255,255' : '13,13,13';
+    fogGrd.addColorStop(0, `rgba(${bgClr},0)`);
+    fogGrd.addColorStop(1, `rgba(${bgClr},0.55)`);
     ctx.fillStyle = fogGrd; ctx.fillRect(0, H*0.7, W, H*0.3);
 
     RAF = requestAnimationFrame(draw);

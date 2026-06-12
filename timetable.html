@@ -147,13 +147,14 @@
       <a href="timetable.html" class="nav-link active">Timetable</a>
       <a href="faculty.html"   class="nav-link">Faculty</a>
       <a href="division.html" class="nav-link">Division</a>
+      <button class="theme-btn" id="theme-toggle"><span></span><span>Dark</span></button>
     </div>
   </nav>
 
   <div class="container" style="padding-bottom:80px;">
 
     <div style="padding:32px 0 0;">
-      <div class="section-label" style="margin-bottom:12px;">📅 Results</div>
+      <div class="section-label" style="margin-bottom:12px;">Results</div>
       <h1 class="section-title anim-up">Generated <span class="grad-full">Timetable</span></h1>
       <p class="section-sub anim-up delay-1">Conflict-free schedule produced by the Greedy Graph Coloring Algorithm.</p>
     </div>
@@ -161,10 +162,10 @@
     <!-- NO DATA -->
     <div id="noDataView" class="glass" style="display:none;margin-bottom:40px;">
       <div class="no-data">
-        <div class="no-data-icon">📅</div>
+        <div class="no-data-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
         <h3>No timetable generated yet</h3>
         <p>Go to Setup, add your data, then click "Generate Timetable".</p>
-        <a href="setup.html" class="btn btn-primary">⚙️ Go to Setup</a>
+        <a href="setup.html" class="btn btn-primary">Go to Setup</a>
       </div>
     </div>
 
@@ -193,19 +194,19 @@
 
       <!-- ACTION BAR -->
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:32px;" class="no-print">
-        <a href="graph.html"   class="btn btn-ghost">🔗 View Graph</a>
-        <a href="faculty.html" class="btn btn-ghost">👨‍🏫 Faculty View</a>
-        <a href="setup.html"   class="btn btn-ghost">⚙️ Edit Setup</a>
-        <button class="btn btn-cyan"    onclick="regenerate()">🔄 Regenerate</button>
-        <button class="btn btn-primary" onclick="window.print()">🖨️ Print Timetable</button>
+        <a href="graph.html"   class="btn btn-ghost">View Graph</a>
+        <a href="faculty.html" class="btn btn-ghost">Faculty View</a>
+        <a href="setup.html"   class="btn btn-ghost">Edit Setup</a>
+        <button class="btn btn-cyan"    onclick="regenerate()">Regenerate</button>
+        <button class="btn btn-primary" onclick="window.print()">Print Timetable</button>
       </div>
 
       <!-- SLOT CARDS -->
-      <div class="section-label" style="margin-bottom:16px;">🎨 Time Slot Cards</div>
+      <div class="section-label" style="margin-bottom:16px;">Time Slot Cards</div>
       <div class="tt-grid" id="ttGrid"></div>
 
       <!-- TABLE VIEW -->
-      <div class="section-label" style="margin-bottom:16px;">📋 Table View</div>
+      <div class="section-label" style="margin-bottom:16px;">Table View</div>
       <div class="glass" style="padding:24px;margin-bottom:48px;">
         <div class="period-table-wrap">
           <table class="period-table" id="ttTable">
@@ -224,7 +225,7 @@
       </div>
 
       <!-- ALGORITHM WALKTHROUGH -->
-      <div class="section-label" style="margin-bottom:16px;">🧠 Algorithm Walkthrough</div>
+      <div class="section-label" style="margin-bottom:16px;">Algorithm Walkthrough</div>
       <div class="glass" style="padding:28px;margin-bottom:48px;">
         <p style="font-size:0.88rem;color:var(--c-muted);margin-bottom:24px;">
           Step-by-step trace of the Greedy Graph Coloring algorithm assigning each subject to a time slot.
@@ -235,13 +236,13 @@
       <!-- THEORY FOOTER -->
       <div class="glass" style="padding:28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:24px;margin-bottom:20px;">
         <div>
-          <div style="font-size:0.8rem;font-weight:700;color:var(--c-purple);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">📐 Algorithm</div>
+          <div style="font-size:0.8rem;font-weight:700;color:var(--c-purple);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">Algorithm</div>
           <p style="font-size:0.85rem;color:var(--c-muted);line-height:1.65;">
             <strong style="color:var(--c-text)">Greedy Graph Coloring</strong> — processes each vertex and assigns the smallest color not used by any of its neighbors.
           </p>
         </div>
         <div>
-          <div style="font-size:0.8rem;font-weight:700;color:var(--c-cyan);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">⏱️ Complexity</div>
+          <div style="font-size:0.8rem;font-weight:700;color:var(--c-cyan);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">Complexity</div>
           <p style="font-size:0.85rem;color:var(--c-muted);line-height:1.65;">
             Time: <strong style="color:var(--c-text)">O(V² + E)</strong><br/>
             Space: <strong style="color:var(--c-text)">O(V + E)</strong><br/>
@@ -249,13 +250,13 @@
           </p>
         </div>
         <div>
-          <div style="font-size:0.8rem;font-weight:700;color:var(--c-green);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">✅ Guarantee</div>
+          <div style="font-size:0.8rem;font-weight:700;color:var(--c-green);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">Guarantee</div>
           <p style="font-size:0.85rem;color:var(--c-muted);line-height:1.65;">
             No two conflicting subjects share a time slot. <strong style="color:var(--c-text)">Zero scheduling conflicts</strong> guaranteed.
           </p>
         </div>
         <div>
-          <div style="font-size:0.8rem;font-weight:700;color:var(--c-amber);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">🎓 VTU Context</div>
+          <div style="font-size:0.8rem;font-weight:700;color:var(--c-amber);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">VTU Context</div>
           <p style="font-size:0.85rem;color:var(--c-muted);line-height:1.65;">
             This demonstrates how Graph Theory (CS subject, VTU 3rd/4th sem) solves a <strong style="color:var(--c-text)">real administrative problem</strong>.
           </p>
@@ -266,13 +267,14 @@
   </div><!-- /container -->
 
   <footer class="footer">
-    <div class="footer-brand">🎓 VTU Graph Theory Mini Project</div>
+    <div class="footer-brand">VTU Graph Theory Mini Project</div>
     <div class="footer-links"><a href="index.html">Home</a><a href="setup.html">Setup</a><a href="graph.html">Graph</a><a href="timetable.html">Timetable</a><a href="faculty.html">Faculty</a><a href="division.html">Division</a></div>
     <div>Graph Coloring • Greedy Algorithm • Vanilla JS</div>
   </footer>
 </div>
 
 <div class="toast" id="toast"></div>
+<script src="js/theme.js"></script>
 <script src="js/bg3d.js"></script>
 <script src="js/state.js"></script>
 <script>
@@ -295,8 +297,8 @@ function toast(msg, type='success') {
   clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),3200);
 }
 
-function init() {
-  const state     = APP.loadState();
+async function init() {
+  const state     = await APP.loadState();
   const hasData   = state.subjects.length > 0 && Object.keys(state.coloring).length > 0;
   document.getElementById('noDataView').style.display = hasData ? 'none' : 'block';
   document.getElementById('mainView').style.display   = hasData ? 'block' : 'none';
@@ -334,8 +336,8 @@ function buildCards(state, slots, conflicts) {
       return `<div class="subject-item">
         <div class="subject-item-name">${APP.subjectName(state,id)}</div>
         <div class="subject-item-meta">
-          ${teachers.map(t=>`<span class="meta-badge">👨‍🏫 ${t}</span>`).join('')}
-          ${divs.map(d=>`<span class="meta-badge">🏫 ${d}</span>`).join('')}
+          ${teachers.map(t=>`<span class="meta-badge">${t}</span>`).join('')}
+          ${divs.map(d=>`<span class="meta-badge">${d}</span>`).join('')}
         </div>
       </div>`;
     }).join('');
@@ -370,9 +372,9 @@ function buildTable(state, slots, conflicts) {
       tr.innerHTML = `
         <td><span class="td-slot" style="color:${SLOT_BG[ci%SLOT_BG.length].includes('a855f7')?'#d8aaff':'#7ee8f8'}">Slot ${ci+1}</span></td>
         <td><strong>${APP.subjectName(state,id)}</strong></td>
-        <td>${teachers.map(t=>`<span class="td-chip">👨‍🏫 ${t}</span>`).join(' ') || '<span style="color:var(--c-muted)">—</span>'}</td>
-        <td>${divs.map(d=>`<span class="td-chip">🏫 ${d}</span>`).join(' ') || '<span style="color:var(--c-muted)">—</span>'}</td>
-        <td>${neighbors.map(n=>`<span class="td-chip" style="border-color:rgba(244,63,94,0.3)">⚡ ${n}</span>`).join(' ') || '<span style="color:var(--c-green)">None ✓</span>'}</td>
+        <td>${teachers.map(t=>`<span class="td-chip">${t}</span>`).join(' ') || '<span style="color:var(--c-muted)">—</span>'}</td>
+        <td>${divs.map(d=>`<span class="td-chip">${d}</span>`).join(' ') || '<span style="color:var(--c-muted)">—</span>'}</td>
+        <td>${neighbors.map(n=>`<span class="td-chip" style="border-color:rgba(244,63,94,0.3)">${n}</span>`).join(' ') || '<span style="color:var(--c-green)">None ✓</span>'}</td>
       `;
       tbody.appendChild(tr);
     });
@@ -409,14 +411,14 @@ function buildAlgo(state) {
   });
 }
 
-function regenerate() {
-  const state = APP.loadState();
+async function regenerate() {
+  const state = await APP.loadState();
   if (state.subjects.length === 0) { toast('No subjects found. Go to Setup.','error'); return; }
-  const { coloring, steps } = APP.runGraphColoring(state);
+  const { coloring, steps } = await APP.runGraphColoring(state);
   state.coloring = coloring; state.algoSteps = steps;
-  APP.saveState(state);
-  toast('✅ Timetable regenerated!');
-  init();
+  await APP.saveState(state);
+  toast('Timetable regenerated!');
+  await init();
 }
 
 window.addEventListener('DOMContentLoaded', init);

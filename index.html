@@ -1,312 +1,541 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Graph Coloring — Timetable Scheduling | VTU Mini Project</title>
-<link rel="stylesheet" href="css/style.css"/>
-<style>
-/* ── PAGE-SPECIFIC ── */
-.hero{
-  min-height:90vh;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  text-align:center;padding:80px 24px 60px;
-}
-.hero-badge{
-  display:inline-flex;align-items:center;gap:8px;
-  background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.35);
-  color:var(--c-purple);border-radius:50px;padding:8px 20px;
-  font-size:0.75rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;
-  margin-bottom:28px;animation:fadeUp 0.6s ease both;
-}
-.hero-badge .dot{width:8px;height:8px;border-radius:50%;background:var(--c-purple);animation:pulse 2s infinite;}
-.hero-h1{
-  font-size:clamp(2.6rem,7vw,5.2rem);font-weight:900;
-  line-height:1.06;letter-spacing:-0.04em;
-  margin-bottom:24px;animation:fadeUp 0.6s 0.1s ease both;
-}
-.hero-sub{
-  font-size:clamp(1rem,2vw,1.2rem);color:var(--c-muted);
-  max-width:600px;margin:0 auto 40px;
-  animation:fadeUp 0.6s 0.2s ease both;line-height:1.7;
-}
-.hero-actions{
-  display:flex;gap:16px;flex-wrap:wrap;justify-content:center;
-  animation:fadeUp 0.6s 0.3s ease both;margin-bottom:80px;
-}
-.hero-stats{
-  display:flex;gap:48px;flex-wrap:wrap;justify-content:center;
-  animation:fadeUp 0.6s 0.4s ease both;
-}
-.stat{text-align:center;}
-.stat-num{font-size:2.4rem;font-weight:900;letter-spacing:-0.04em;line-height:1;}
-.stat-label{font-size:0.78rem;color:var(--c-muted);font-weight:600;letter-spacing:0.06em;text-transform:uppercase;margin-top:4px;}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Graph Coloring — Timetable Scheduling </title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    /* ── PAGE-SPECIFIC ── */
+    .hero {
+      min-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 80px 24px 60px;
+      position: relative;
+      overflow: hidden;
+    }
 
-/* ── FEATURES GRID ── */
-.features-grid{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;
-  margin-top:40px;
-}
-.feature-card{
-  padding:28px;border-radius:var(--r-lg);
-  background:var(--c-surface);border:1px solid var(--c-border);
-  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-  transition:transform var(--t),border-color var(--t),box-shadow var(--t);
-}
-.feature-card:hover{
-  transform:translateY(-6px);
-  border-color:var(--c-border2);
-  box-shadow:var(--shadow),var(--glow-p);
-}
-.feature-icon{
-  width:52px;height:52px;border-radius:var(--r-md);
-  display:flex;align-items:center;justify-content:center;
-  font-size:1.5rem;margin-bottom:18px;
-}
-.fi-purple{background:rgba(168,85,247,0.15);border:1px solid rgba(168,85,247,0.3);}
-.fi-cyan{background:rgba(6,182,212,0.12);border:1px solid rgba(6,182,212,0.3);}
-.fi-green{background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);}
-.fi-amber{background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);}
-.feature-card h3{font-size:1.05rem;font-weight:700;margin-bottom:8px;}
-.feature-card p{font-size:0.87rem;color:var(--c-muted);line-height:1.6;}
+    #hero-graph {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.92;
+    }
 
-/* ── HOW IT WORKS ── */
-.steps-flow{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0;
-  position:relative;margin-top:40px;
-}
-.flow-step{
-  display:flex;flex-direction:column;align-items:center;text-align:center;
-  padding:32px 20px;position:relative;
-}
-.flow-step:not(:last-child)::after{
-  content:'→';position:absolute;right:-12px;top:50%;transform:translateY(-50%);
-  font-size:1.4rem;color:var(--c-muted);
-}
-.flow-num{
-  width:56px;height:56px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:1.3rem;font-weight:900;margin-bottom:16px;
-  background:linear-gradient(135deg,var(--c-purple),var(--c-indigo));
-  box-shadow:0 8px 24px rgba(168,85,247,0.4);
-  color:#fff;
-}
-.flow-step h4{font-size:0.95rem;font-weight:700;margin-bottom:6px;}
-.flow-step p{font-size:0.83rem;color:var(--c-muted);line-height:1.55;}
+    .hero>*:not(#hero-graph) {
+      position: relative;
+      z-index: 1;
+    }
 
-/* ── THEORY CARDS ── */
-.theory-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;margin-top:40px;}
-.theory-card{
-  padding:24px;border-radius:var(--r-md);
-  background:var(--c-surface);border:1px solid var(--c-border);
-  backdrop-filter:blur(12px);
-  transition:transform var(--t),border-color var(--t);
-}
-.theory-card:hover{transform:translateY(-4px);border-color:rgba(6,182,212,0.4);}
-.theory-card .tk{font-size:1.8rem;margin-bottom:12px;}
-.theory-card h3{font-size:0.95rem;font-weight:700;margin-bottom:8px;}
-.theory-card p{font-size:0.85rem;color:var(--c-muted);line-height:1.6;}
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 107, 0, 0.12);
+      border: 1px solid rgba(255, 107, 0, 0.38);
+      color: var(--c-accent);
+      border-radius: 50px;
+      padding: 8px 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+      animation: fadeUp 0.6s ease both;
+    }
 
-/* CTA BAND */
-.cta-band{
-  margin:0 0 80px;padding:56px 40px;border-radius:var(--r-xl);
-  background:linear-gradient(135deg,rgba(168,85,247,0.12),rgba(6,182,212,0.08));
-  border:1px solid rgba(168,85,247,0.2);
-  text-align:center;
-  backdrop-filter:blur(16px);
-}
-.cta-band h2{font-size:clamp(1.6rem,3.5vw,2.4rem);font-weight:800;letter-spacing:-0.03em;margin-bottom:12px;}
-.cta-band p{color:var(--c-muted);font-size:1rem;margin-bottom:28px;}
+    .hero-badge .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--c-accent);
+      animation: pulse 2s infinite;
+    }
 
-@media(max-width:640px){
-  .hero-stats{gap:24px;}
-  .steps-flow{gap:0;}
-  .flow-step::after{display:none;}
-}
-</style>
+    .hero-h1 {
+      font-size: clamp(2.6rem, 7vw, 5.2rem);
+      font-weight: 900;
+      line-height: 1.06;
+      letter-spacing: -0.04em;
+      margin-bottom: 24px;
+      animation: fadeUp 0.6s 0.1s ease both;
+    }
+
+    .hero-sub {
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      color: var(--c-muted);
+      max-width: 600px;
+      margin: 0 auto 40px;
+      animation: fadeUp 0.6s 0.2s ease both;
+      line-height: 1.7;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+      animation: fadeUp 0.6s 0.3s ease both;
+      margin-bottom: 80px;
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 48px;
+      flex-wrap: wrap;
+      justify-content: center;
+      animation: fadeUp 0.6s 0.4s ease both;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-num {
+      font-size: 2.4rem;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 0.78rem;
+      color: var(--c-muted);
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    /* ── FEATURES GRID ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-top: 40px;
+    }
+
+    .feature-card {
+      padding: 28px;
+      border-radius: var(--r-lg);
+      background: var(--c-surface);
+      border: 1px solid var(--c-border);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      transition: transform var(--t), border-color var(--t), box-shadow var(--t);
+    }
+
+    .feature-card:hover {
+      transform: translateY(-6px);
+      border-color: var(--c-border2);
+      box-shadow: var(--shadow), var(--glow-p);
+    }
+
+    .feature-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: var(--r-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 18px;
+    }
+
+    .fi-purple {
+      background: rgba(255, 107, 0, 0.15);
+      border: 1px solid rgba(255, 107, 0, 0.3);
+    }
+
+    .fi-cyan {
+      background: rgba(255, 140, 56, 0.12);
+      border: 1px solid rgba(255, 140, 56, 0.3);
+    }
+
+    .fi-green {
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .fi-amber {
+      background: rgba(255, 107, 0, 0.12);
+      border: 1px solid rgba(255, 107, 0, 0.3);
+    }
+
+    .feature-card h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .feature-card p {
+      font-size: 0.87rem;
+      color: var(--c-muted);
+      line-height: 1.6;
+    }
+
+    /* ── HOW IT WORKS ── */
+    .steps-flow {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0;
+      position: relative;
+      margin-top: 40px;
+    }
+
+    .flow-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 32px 20px;
+      position: relative;
+    }
+
+    .flow-step:not(:last-child)::after {
+      content: '→';
+      position: absolute;
+      right: -12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1.4rem;
+      color: var(--c-muted);
+    }
+
+    .flow-num {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      font-weight: 900;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, var(--c-accent), var(--c-accent2));
+      box-shadow: 0 8px 24px rgba(255, 107, 0, 0.42);
+      color: #fff;
+    }
+
+    .flow-step h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .flow-step p {
+      font-size: 0.83rem;
+      color: var(--c-muted);
+      line-height: 1.55;
+    }
+
+    /* ── THEORY CARDS ── */
+    .theory-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      margin-top: 40px;
+    }
+
+    .theory-card {
+      padding: 24px;
+      border-radius: var(--r-md);
+      background: var(--c-surface);
+      border: 1px solid var(--c-border);
+      backdrop-filter: blur(12px);
+      transition: transform var(--t), border-color var(--t);
+    }
+
+    .theory-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(255, 107, 0, 0.42);
+    }
+
+    .theory-card .tk {
+      display: flex;
+      align-items: center;
+      margin-bottom: 14px;
+      opacity: 0.9;
+    }
+
+    .theory-card h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .theory-card p {
+      font-size: 0.85rem;
+      color: var(--c-muted);
+      line-height: 1.6;
+    }
+
+    /* CTA BAND */
+    .cta-band {
+      margin: 0 0 80px;
+      padding: 56px 40px;
+      border-radius: var(--r-xl);
+      background: linear-gradient(135deg, rgba(255, 107, 0, 0.12), rgba(204, 74, 0, 0.08));
+      border: 1px solid rgba(255, 107, 0, 0.25);
+      text-align: center;
+      backdrop-filter: blur(16px);
+    }
+
+    .cta-band h2 {
+      font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 12px;
+    }
+
+    .cta-band p {
+      color: var(--c-muted);
+      font-size: 1rem;
+      margin-bottom: 28px;
+    }
+
+    @media(max-width:640px) {
+      .hero-stats {
+        gap: 24px;
+      }
+
+      .steps-flow {
+        gap: 0;
+      }
+
+      .flow-step::after {
+        display: none;
+      }
+    }
+  </style>
 </head>
+
 <body>
-<canvas id="bg3d"></canvas>
-<div class="bg-overlay"></div>
+  <canvas id="bg3d"></canvas>
+  <div class="bg-overlay"></div>
 
-<div class="page-wrap">
-  <!-- NAV -->
-  <nav class="nav">
-    <a href="index.html" class="nav-logo">
-      <div class="nav-logo-dot">GC</div>
-      <span>GraphScheduler</span>
-    </a>
-    <div class="nav-links">
-      <a href="index.html" class="nav-link active">Home</a>
-      <a href="setup.html" class="nav-link">Setup</a>
-      <a href="graph.html" class="nav-link">Graph</a>
-      <a href="timetable.html" class="nav-link">Timetable</a>
-      <a href="faculty.html"   class="nav-link">Faculty</a>
-      <a href="division.html" class="nav-link">Division</a>
-    </div>
-  </nav>
+  <div class="page-wrap">
+    <!-- NAV -->
+    <nav class="nav">
+      <a href="index.html" class="nav-logo">
+        <div class="nav-logo-dot">GC</div>
+        <span>GraphScheduler</span>
+      </a>
+      <div class="nav-links">
+        <a href="index.html" class="nav-link active">Home</a>
+        <a href="setup.html" class="nav-link">Setup</a>
+        <a href="graph.html" class="nav-link">Graph</a>
+        <a href="timetable.html" class="nav-link">Timetable</a>
+        <a href="faculty.html" class="nav-link">Faculty</a>
+        <a href="division.html" class="nav-link">Division</a>
+        <button class="theme-btn" id="theme-toggle"><span></span><span>Dark</span></button>
+      </div>
+    </nav>
 
-  <!-- HERO -->
-  <section class="hero">
-    <div class="hero-badge"><span class="dot"></span> VTU Graph Theory Mini Project</div>
-    <h1 class="hero-h1">
-      <span class="grad-purple">Graph Coloring</span><br/>
-      for Timetable<br/>
-      <span class="grad-cyan">Scheduling</span>
-    </h1>
-    <p class="hero-sub">
-      Enter your subjects, teachers, and class divisions — the system automatically detects conflicts and generates a
-      <strong style="color:var(--c-text)">conflict-free timetable</strong> using the
-      <strong style="color:var(--c-text)">Greedy Graph Coloring Algorithm</strong>.
-    </p>
-    <div class="hero-actions">
-      <a href="setup.html" class="btn btn-primary btn-lg">🚀 Start Building Timetable</a>
-      <a href="#theory" class="btn btn-ghost btn-lg">📚 Learn the Theory</a>
-    </div>
-    <div class="hero-stats">
-      <div class="stat">
-        <div class="stat-num grad-purple">O(V²)</div>
-        <div class="stat-label">Algorithm Complexity</div>
+    <!-- HERO -->
+    <section class="hero">
+      <canvas id="hero-graph"></canvas>
+      <div class="hero-badge"><span class="dot"></span> VTU Graph Theory Mini Project</div>
+      <h1 class="hero-h1">
+        <span class="grad-purple">Graph Coloring</span><br />
+        for Timetable<br />
+        <span class="grad-cyan">Scheduling</span>
+      </h1>
+      <p class="hero-sub">
+        Enter your subjects, teachers, and class divisions — the system automatically detects conflicts and generates a
+        <strong style="color:var(--c-text)">conflict-free timetable</strong> using the
+        <strong style="color:var(--c-text)">Greedy Graph Coloring Algorithm</strong>.
+      </p>
+      <div class="hero-actions">
+        <a href="setup.html" class="btn btn-primary btn-lg">Start Building Timetable →</a>
+        <a href="#theory" class="btn btn-ghost btn-lg">Learn the Theory</a>
       </div>
-      <div class="stat">
-        <div class="stat-num grad-cyan">Auto</div>
-        <div class="stat-label">Conflict Detection</div>
-      </div>
-      <div class="stat">
-        <div class="stat-num grad-full">0</div>
-        <div class="stat-label">Clashes Guaranteed</div>
-      </div>
-      <div class="stat">
-        <div class="stat-num" style="color:var(--c-green)">Min</div>
-        <div class="stat-label">Slots Used</div>
-      </div>
-    </div>
-  </section>
-
-  <div class="container">
-
-    <!-- FEATURES -->
-    <section class="section anim-up">
-      <div class="section-label">✦ What It Does</div>
-      <h2 class="section-title">A real solution to a <span class="grad-purple">real problem</span></h2>
-      <p class="section-sub">University timetabling is an NP-hard problem. Graph coloring is the elegant theoretical solution.</p>
-      <div class="features-grid">
-        <div class="feature-card anim-up delay-1">
-          <div class="feature-icon fi-purple">🧠</div>
-          <h3>Auto Conflict Detection</h3>
-          <p>Just add subjects, assign teachers, and define class divisions. The system builds the conflict graph automatically — no manual edge entry.</p>
+      <div class="hero-stats">
+        <div class="stat">
+          <div class="stat-num grad-purple">O(V²)</div>
+          <div class="stat-label">Algorithm Complexity</div>
         </div>
-        <div class="feature-card anim-up delay-2">
-          <div class="feature-icon fi-cyan">🎨</div>
-          <h3>Greedy Graph Coloring</h3>
-          <p>Assigns the minimum number of time slots needed so that no two conflicting subjects share the same slot. Provably optimal coloring approach.</p>
+        <div class="stat">
+          <div class="stat-num grad-cyan">Auto</div>
+          <div class="stat-label">Conflict Detection</div>
         </div>
-        <div class="feature-card anim-up delay-3">
-          <div class="feature-icon fi-green">🗓️</div>
-          <h3>Timetable Generator</h3>
-          <p>Produces a clean, ready-to-use timetable grouped by time slot with subjects, assigned teachers, and class divisions shown clearly.</p>
+        <div class="stat">
+          <div class="stat-num grad-full">0</div>
+          <div class="stat-label">Clashes Guaranteed</div>
         </div>
-        <div class="feature-card anim-up delay-4">
-          <div class="feature-icon fi-amber">🔗</div>
-          <h3>Visual Graph View</h3>
-          <p>See the full conflict graph on an interactive canvas — nodes colored by their assigned slot, edges showing all detected conflicts.</p>
+        <div class="stat">
+          <div class="stat-num" style="color:var(--c-green)">Min</div>
+          <div class="stat-label">Slots Used</div>
         </div>
       </div>
     </section>
 
-    <!-- HOW IT WORKS -->
-    <section class="section anim-up">
-      <div class="section-label">⚙️ Process</div>
-      <h2 class="section-title">How it <span class="grad-cyan">works</span></h2>
-      <p class="section-sub">Three simple steps — the algorithm does the hard work.</p>
-      <div class="steps-flow glass" style="padding:0;">
-        <div class="flow-step">
-          <div class="flow-num">1</div>
-          <h4>Add Data</h4>
-          <p>Enter subjects, assign teachers to subjects, define class divisions and their subjects.</p>
+    <div class="container">
+
+      <!-- FEATURES -->
+      <section class="section anim-up">
+        <div class="section-label">What It Does</div>
+        <h2 class="section-title">A real solution to a <span class="grad-purple">real problem</span></h2>
+        <p class="section-sub">University timetabling is an NP-hard problem. Graph coloring is the elegant theoretical
+          solution.</p>
+        <div class="features-grid">
+          <div class="feature-card anim-up delay-1">
+            <div class="feature-icon fi-purple">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            </div>
+            <h3>Auto Conflict Detection</h3>
+            <p>Just add subjects, assign teachers, and define class divisions. The system builds the conflict graph
+              automatically — no manual edge entry.</p>
+          </div>
+          <div class="feature-card anim-up delay-2">
+            <div class="feature-icon fi-cyan">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1"/><circle cx="17.5" cy="10.5" r="1"/><circle cx="8.5" cy="7.5" r="1"/><circle cx="6.5" cy="12.5" r="1"/><path d="M12 2C6.5 2 2 6.5 2 12a10 10 0 0 0 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+            </div>
+            <h3>Greedy Graph Coloring</h3>
+            <p>Assigns the minimum number of time slots needed so that no two conflicting subjects share the same slot.
+              Provably optimal coloring approach.</p>
+          </div>
+          <div class="feature-card anim-up delay-3">
+            <div class="feature-icon fi-green">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <h3>Timetable Generator</h3>
+            <p>Produces a clean, ready-to-use timetable grouped by time slot with subjects, assigned teachers, and class
+              divisions shown clearly.</p>
+          </div>
+          <div class="feature-card anim-up delay-4">
+            <div class="feature-icon fi-amber">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><line x1="12" y1="7" x2="5.5" y2="17"/><line x1="12" y1="7" x2="18.5" y2="17"/><line x1="7" y1="19" x2="17" y2="19"/></svg>
+            </div>
+            <h3>Visual Graph View</h3>
+            <p>See the full conflict graph on an interactive canvas — nodes colored by their assigned slot, edges
+              showing all detected conflicts.</p>
+          </div>
         </div>
-        <div class="flow-step">
-          <div class="flow-num">2</div>
-          <h4>Conflict Graph Built</h4>
-          <p>System automatically finds all conflicts — same teacher or same class → can't share a slot.</p>
+      </section>
+
+      <!-- HOW IT WORKS -->
+      <section class="section anim-up">
+        <div class="section-label">Process</div>
+        <h2 class="section-title">How it <span class="grad-cyan">works</span></h2>
+        <p class="section-sub">Three simple steps — the algorithm does the hard work.</p>
+        <div class="steps-flow glass" style="padding:0;">
+          <div class="flow-step">
+            <div class="flow-num">1</div>
+            <h4>Add Data</h4>
+            <p>Enter subjects, assign teachers to subjects, define class divisions and their subjects.</p>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num">2</div>
+            <h4>Conflict Graph Built</h4>
+            <p>System automatically finds all conflicts — same teacher or same class → can't share a slot.</p>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num">3</div>
+            <h4>Coloring Algorithm</h4>
+            <p>Greedy algorithm assigns minimum colors (slots) such that no two adjacent nodes share a color.</p>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num">4</div>
+            <h4>Timetable Ready</h4>
+            <p>View the conflict-free timetable with all subjects placed into appropriate time slots.</p>
+          </div>
         </div>
-        <div class="flow-step">
-          <div class="flow-num">3</div>
-          <h4>Coloring Algorithm</h4>
-          <p>Greedy algorithm assigns minimum colors (slots) such that no two adjacent nodes share a color.</p>
+      </section>
+
+      <!-- THEORY -->
+      <section class="section anim-up" id="theory">
+        <div class="section-label">Theory</div>
+        <h2 class="section-title">Graph Coloring <span class="grad-full">Explained</span></h2>
+        <p class="section-sub">The mathematical foundation behind this project.</p>
+        <div class="theory-grid">
+          <div class="theory-card">
+            <div class="tk">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--c-accent)" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="9" stroke-dasharray="2 3" stroke-opacity="0.45"/></svg>
+            </div>
+            <h3>Vertices (Nodes)</h3>
+            <p>Each <strong style="color:var(--c-text)">subject</strong> is a vertex in the graph. e.g., Mathematics,
+              Physics, Chemistry are all vertices.</p>
+          </div>
+          <div class="theory-card">
+            <div class="tk">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--c-accent)" stroke-width="1.8" stroke-linecap="round"><circle cx="5" cy="12" r="3"/><circle cx="19" cy="12" r="3"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            </div>
+            <h3>Edges (Conflicts)</h3>
+            <p>An edge connects two subjects that <strong style="color:var(--c-text)">conflict</strong> — share a
+              teacher or a student group. They cannot be in the same slot.</p>
+          </div>
+          <div class="theory-card">
+            <div class="tk">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--c-accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="5" height="16" rx="1"/><rect x="9.5" y="4" width="5" height="16" rx="1"/><rect x="17" y="4" width="5" height="16" rx="1"/></svg>
+            </div>
+            <h3>Colors = Slots</h3>
+            <p>Each <strong style="color:var(--c-text)">color</strong> = one time slot. Two adjacent nodes must have
+              different colors — two conflicting subjects must be in different slots.</p>
+          </div>
+          <div class="theory-card">
+            <div class="tk">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--c-accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+            <h3>Chromatic Number</h3>
+            <p>The <strong style="color:var(--c-text)">minimum number of colors</strong> needed is the chromatic number
+              χ(G). Greedy gives a near-optimal result in O(V²) time.</p>
+          </div>
+          <div class="theory-card">
+            <div class="tk">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--c-accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            </div>
+            <h3>Greedy Algorithm</h3>
+            <p>For each vertex: look at neighbors' colors → assign the <strong style="color:var(--c-text)">smallest
+                unused color</strong>. Simple, fast, and effective.</p>
+          </div>
+          <div class="theory-card">
+            <div class="tk">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--c-accent)" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </div>
+            <h3>Real-World Use</h3>
+            <p>Used in university scheduling, exam timetabling, <strong style="color:var(--c-text)">register
+                allocation</strong> in compilers, and radio frequency assignment.</p>
+          </div>
         </div>
-        <div class="flow-step">
-          <div class="flow-num">4</div>
-          <h4>Timetable Ready</h4>
-          <p>View the conflict-free timetable with all subjects placed into appropriate time slots.</p>
-        </div>
+      </section>
+
+      <!-- CTA -->
+      <div class="cta-band anim-up">
+        <h2>Ready to generate your <span class="grad-purple">conflict-free timetable</span>?</h2>
+        <p>Add your subjects, teachers, and divisions — the algorithm does the rest.</p>
+        <a href="setup.html" class="btn btn-primary btn-lg">Go to Setup →</a>
       </div>
-    </section>
 
-    <!-- THEORY -->
-    <section class="section anim-up" id="theory">
-      <div class="section-label">📚 Theory</div>
-      <h2 class="section-title">Graph Coloring <span class="grad-full">Explained</span></h2>
-      <p class="section-sub">The mathematical foundation behind this project.</p>
-      <div class="theory-grid">
-        <div class="theory-card">
-          <div class="tk">⚪</div>
-          <h3>Vertices (Nodes)</h3>
-          <p>Each <strong style="color:var(--c-text)">subject</strong> is a vertex in the graph. e.g., Mathematics, Physics, Chemistry are all vertices.</p>
-        </div>
-        <div class="theory-card">
-          <div class="tk">↔️</div>
-          <h3>Edges (Conflicts)</h3>
-          <p>An edge connects two subjects that <strong style="color:var(--c-text)">conflict</strong> — share a teacher or a student group. They cannot be in the same slot.</p>
-        </div>
-        <div class="theory-card">
-          <div class="tk">🎨</div>
-          <h3>Colors = Slots</h3>
-          <p>Each <strong style="color:var(--c-text)">color</strong> = one time slot. Two adjacent nodes must have different colors — two conflicting subjects must be in different slots.</p>
-        </div>
-        <div class="theory-card">
-          <div class="tk">🏆</div>
-          <h3>Chromatic Number</h3>
-          <p>The <strong style="color:var(--c-text)">minimum number of colors</strong> needed is the chromatic number χ(G). Greedy gives a near-optimal result in O(V²) time.</p>
-        </div>
-        <div class="theory-card">
-          <div class="tk">⚡</div>
-          <h3>Greedy Algorithm</h3>
-          <p>For each vertex: look at neighbors' colors → assign the <strong style="color:var(--c-text)">smallest unused color</strong>. Simple, fast, and effective.</p>
-        </div>
-        <div class="theory-card">
-          <div class="tk">🎓</div>
-          <h3>Real-World Use</h3>
-          <p>Used in university scheduling, exam timetabling, <strong style="color:var(--c-text)">register allocation</strong> in compilers, and radio frequency assignment.</p>
-        </div>
+    </div><!-- /container -->
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <div class="footer-brand">VTU Graph Theory Mini Project</div>
+      <div class="footer-links">
+        <a href="index.html">Home</a>
+        <a href="setup.html">Setup</a>
+        <a href="graph.html">Graph</a>
+        <a href="timetable.html">Timetable</a>
+        <a href="faculty.html">Faculty</a><a href="division.html">Division</a>
       </div>
-    </section>
+      <div>Graph Coloring • Greedy Algorithm • Vanilla JS</div>
+    </footer>
+  </div>
 
-    <!-- CTA -->
-    <div class="cta-band anim-up">
-      <h2>Ready to generate your <span class="grad-purple">conflict-free timetable</span>?</h2>
-      <p>Add your subjects, teachers, and divisions — the algorithm does the rest.</p>
-      <a href="setup.html" class="btn btn-primary btn-lg">🚀 Go to Setup →</a>
-    </div>
-
-  </div><!-- /container -->
-
-  <!-- FOOTER -->
-  <footer class="footer">
-    <div class="footer-brand">🎓 VTU Graph Theory Mini Project</div>
-    <div class="footer-links">
-      <a href="index.html">Home</a>
-      <a href="setup.html">Setup</a>
-      <a href="graph.html">Graph</a>
-      <a href="timetable.html">Timetable</a>
-      <a href="faculty.html">Faculty</a><a href="division.html">Division</a>
-    </div>
-    <div>Graph Coloring • Greedy Algorithm • Vanilla JS</div>
-  </footer>
-</div>
-
-<div class="toast" id="toast"></div>
-<script src="js/bg3d.js"></script>
-<script src="js/state.js"></script>
+  <div class="toast" id="toast"></div>
+  <script src="js/theme.js"></script>
+  <script src="js/bg3d.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/hero-graph.js"></script>
 </body>
+
 </html>
