@@ -72,7 +72,7 @@ logger = logging.getLogger(__name__)
 
 # ── App ───────────────────────────────────────────────────────────────────────
 
-app = Flask(__name__, static_folder="../", static_url_path="")
+app = Flask(__name__, static_folder="../frontend", static_url_path="")
 CORS(app, origins=["http://127.0.0.1:5000", "http://localhost:5000"])
 
 database.init_db()
@@ -128,45 +128,36 @@ def method_not_allowed(_e):
 
 
 # ── Static serving ────────────────────────────────────────────────────────────
-
-import os as _os
-from flask import send_from_directory as _sfd
-
-_ROOT     = _os.path.abspath(_os.path.join(_os.path.dirname(__file__), ".."))
-_FRONTEND = _os.path.join(_ROOT, "frontend")
-
+# Flask's built-in static file handler now serves everything from frontend/.
+# static_folder="../frontend" means:
+#   /             → frontend/index.html
+#   /setup.html   → frontend/setup.html
+#   /css/style.css → frontend/css/style.css
+#   /js/state.js  → frontend/js/state.js  etc.
 
 @app.route("/")
-@app.route("/index.html")
 def serve_index():
-    return _sfd(_FRONTEND, "index.html")
+    return app.send_static_file("index.html")
 
 @app.route("/setup.html")
 def serve_setup():
-    return _sfd(_FRONTEND, "setup.html")
+    return app.send_static_file("setup.html")
 
 @app.route("/graph.html")
 def serve_graph():
-    return _sfd(_FRONTEND, "graph.html")
+    return app.send_static_file("graph.html")
 
 @app.route("/timetable.html")
 def serve_timetable():
-    return _sfd(_FRONTEND, "timetable.html")
+    return app.send_static_file("timetable.html")
 
 @app.route("/faculty.html")
 def serve_faculty():
-    return _sfd(_FRONTEND, "faculty.html")
+    return app.send_static_file("faculty.html")
 
 @app.route("/division.html")
 def serve_division():
-    return _sfd(_FRONTEND, "division.html")
-
-@app.route("/<path:path>")
-def serve_asset(path):
-    """Serve CSS, JS, images and other static assets from project root."""
-    directory, filename = _os.path.split(path)
-    base = _os.path.join(_ROOT, directory) if directory else _ROOT
-    return _sfd(base, filename)
+    return app.send_static_file("division.html")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
